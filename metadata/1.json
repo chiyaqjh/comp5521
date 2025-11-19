@@ -1,0 +1,33 @@
+{
+  "name": "COMP5521 Digital Collectible #1",
+  "description": "A unique digital collectible created for COMP5521 Blockchain Course at The Hong Kong Polytechnic University. This NFT represents the first artwork in our academic collection.",
+  "image": "https://github.com/chiyaqjh/comp5521/blob/main/images/1.jpg",
+  "external_url": "https://github.com/chiyaqjh/comp5521",
+  "attributes": [
+    {
+      "trait_type": "Collection",
+      "value": "COMP5521"
+    },
+    {
+      "trait_type": "Rarity", 
+      "value": "Common"
+    }
+  ]
+    ,
+  "background_color": "1E3A8A",
+  "properties": {
+    "creators": [
+      {
+        "address": "25042448g@connect.polyu.hk",
+        "share": 100
+      }
+    ],
+    "files": [
+      {
+        "uri": "https://github.com/chiyaqjh/comp5521/blob/main/images/1.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "category": "image"
+  }
+}
