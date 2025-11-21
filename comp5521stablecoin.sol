@@ -21,7 +21,7 @@ contract COMP5521Dollar is ERC20 {
         _mint(to, amount* 10 ** decimals());
     }
 
-    uint256 public faucetAmount = 100 * 10 ** decimals(); // 100个代币
+    uint256 public faucetAmount = 1000 * 10 ** decimals(); // 100个代币
     mapping(address => uint256) public lastFaucetTime;
     uint256 public faucetCooldown = 1 seconds;
 

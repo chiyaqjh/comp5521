@@ -40,40 +40,39 @@ contract COMP5521NFT is ERC721 {
         owner = msg.sender;
     }
     
-    
-    /**
- * @dev 安全铸造函数，只有所有者可以调用
- * @param to NFT接收者地址
- * @return tokenId 新铸造的NFT的tokenId
- */
-function safeMint(address to) external onlyOwner returns (uint256) {
-    // 获取当前tokenId并递增计数器
-    uint256 tokenId = _tokenIdCounter.current();
-    _tokenIdCounter.increment();
-    
-    // 安全铸造NFT给目标地址
-    _safeMint(to, tokenId);
-    
-    // 自动生成metadata URI
-    string memory metadataURI = string(abi.encodePacked(
-        "https://raw.githubusercontent.com/chiyaqjh/comp5521/main/metadata/", 
-        Strings.toString(tokenId), 
-        ".json"
-    ));
-    
-    // 设置token的元数据URI
-    _setTokenURI(tokenId, metadataURI);
-    
-    // 记录创建时间和创作者
-    creationTime[tokenId] = block.timestamp;
-    creators[tokenId] = to;
-    
-    // 触发事件
-    emit NFTMinted(tokenId, to, metadataURI, block.timestamp);
-    
-    return tokenId;
-}
-    
+        
+        /**
+    * @dev 安全铸造函数，只有所有者可以调用
+    * @param to NFT接收者地址
+    * @return tokenId 新铸造的NFT的tokenId
+    */
+    function safeMint(address to) external onlyOwner returns (uint256) {
+        // 获取当前tokenId并递增计数器
+        uint256 tokenId = _tokenIdCounter.current()+1;
+        _tokenIdCounter.increment();
+        
+        // 安全铸造NFT给目标地址
+        _safeMint(to, tokenId);
+        
+        // 生成metadata URI
+        string memory metadataURI = string(abi.encodePacked(
+            "https://raw.githubusercontent.com/chiyaqjh/comp5521/main/metadata/", 
+            Strings.toString(tokenId), 
+            ".json"
+        ));
+        
+        // 设置token的元数据URI
+        _setTokenURI(tokenId, metadataURI);
+        
+        // 记录创建时间和创作者
+        creationTime[tokenId] = block.timestamp;
+        creators[tokenId] = to;
+        
+        // 触发事件
+        emit NFTMinted(tokenId, to, metadataURI, block.timestamp);
+        
+        return tokenId;
+    }
     
     
     /**
