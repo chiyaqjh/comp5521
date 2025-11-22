@@ -12,6 +12,15 @@ interface ICOMP5521Dollar {
     function transfer(address to, uint256 amount) external returns (bool);
 }
 
+// COMP5521NFT 接口
+interface ICOMP5521NFT {
+    function transferFromAutomated(address from, address to, uint256 tokenId) external;
+    function ownerOf(uint256 tokenId) external view returns (address);
+    function transferFrom(address from, address to, uint256 tokenId) external;
+    function getApproved(uint256 tokenId) external view returns (address);
+    function isApprovedForAll(address owner, address operator) external view returns (bool);
+}
+
 contract NFTMarketplace is ReentrancyGuard {
     // 上架信息结构体 - 扩展支持拍卖
     struct Listing {
@@ -103,15 +112,7 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 finalPrice,
         uint256 feeAmount
     );
-    
-    // 自动授权事件
-    event AutoApprovedNFT(uint256 indexed tokenId, address indexed owner);
 
-    /**
-     * @dev 构造函数
-     * @param _stablecoin 稳定币合约地址
-     * @param _nftContract NFT合约地址
-     */
     constructor(address _stablecoin, address _nftContract) {
         require(_stablecoin != address(0), "Invalid stablecoin address");
         require(_nftContract != address(0), "Invalid NFT contract address");
@@ -121,36 +122,14 @@ contract NFTMarketplace is ReentrancyGuard {
         feeRecipient = msg.sender;
     }
     
-    /**
-     * @dev 上架NFT（固定价格模式）- 带自动授权
-     * @param tokenId NFT token ID
-     * @param price 价格（稳定币单位）
-     */
     function listNFT(uint256 tokenId, uint256 price) external {
         require(price > 0, "Price must be greater than 0");
         
-        ERC721 nft = ERC721(NFTContract);
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
         require(nft.ownerOf(tokenId) == msg.sender, "Not NFT owner");
         
-        // NFT 自动授权检查
-        bool isApproved = nft.isApprovedForAll(msg.sender, address(this)) || 
-                         nft.getApproved(tokenId) == address(this);
-        
-        if (!isApproved) {
-            // 尝试自动授权
-            try nft.approve(address(this), tokenId) {
-                // 授权成功，继续执行
-                emit AutoApprovedNFT(tokenId, msg.sender);
-            } catch {
-                revert("Auto-approval failed for NFT. Please approve manually first.");
-            }
-        }
-        
-        // 检查活跃状态
-        require(!listings[tokenId].active, "NFT already listed");
-        
-        // 转移NFT到市场合约
-        nft.transferFrom(msg.sender, address(this), tokenId);
+        // 使用免授权转移NFT（不再需要检查 approval）
+        nft.transferFromAutomated(msg.sender, address(this), tokenId);
         
         // 创建上架信息（固定价格模式）
         listings[tokenId] = Listing({
@@ -175,13 +154,6 @@ contract NFTMarketplace is ReentrancyGuard {
         emit Listed(tokenId, msg.sender, price, false);
     }
     
-    /**
-     * @dev 上架NFT进行拍卖 - 带自动授权
-     * @param tokenId NFT token ID
-     * @param startPrice 起拍价
-     * @param duration 拍卖持续时间（秒）
-     * @param fixedBidIncrement 固定加价数额
-     */
     function listNFTForAuction(
         uint256 tokenId,
         uint256 startPrice,
@@ -189,32 +161,13 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 fixedBidIncrement
     ) external {
         require(startPrice > 0, "Start price must be greater than 0");
-        require(duration >= 1 hours, "Duration too short");
-        require(duration <= 30 days, "Duration too long");
         require(fixedBidIncrement > 0, "Fixed bid increment must be greater than 0");
         
-        ERC721 nft = ERC721(NFTContract);
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
         require(nft.ownerOf(tokenId) == msg.sender, "Not NFT owner");
         
-        // NFT 自动授权检查
-        bool isApproved = nft.isApprovedForAll(msg.sender, address(this)) || 
-                         nft.getApproved(tokenId) == address(this);
-        
-        if (!isApproved) {
-            // 尝试自动授权
-            try nft.approve(address(this), tokenId) {
-                // 授权成功，继续执行
-                emit AutoApprovedNFT(tokenId, msg.sender);
-            } catch {
-                revert("Auto-approval failed for NFT. Please approve manually first.");
-            }
-        }
-        
-        // 检查活跃状态
-        require(!listings[tokenId].active, "NFT already listed");
-        
-        // 转移NFT到市场合约
-        nft.transferFrom(msg.sender, address(this), tokenId);
+        // 使用免授权转移NFT
+        nft.transferFromAutomated(msg.sender, address(this), tokenId);
         
         uint256 startTime = block.timestamp;
         uint256 endTime = startTime + duration;
@@ -243,9 +196,6 @@ contract NFTMarketplace is ReentrancyGuard {
         emit AuctionStarted(tokenId, msg.sender, startPrice, startTime, endTime, fixedBidIncrement);
     }
     
-    /**
-     * @dev 购买NFT（固定价格模式）- 免授权稳定币
-     */
     function buyNFT(uint256 tokenId) external nonReentrant {
         Listing storage listing = listings[tokenId];
         require(listing.active, "NFT not for sale");
@@ -253,7 +203,7 @@ contract NFTMarketplace is ReentrancyGuard {
         require(listing.seller != msg.sender, "Cannot buy your own NFT");
         
         ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
-        ERC721 nft = ERC721(NFTContract);
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
         
         // 计算费用和卖家所得
         uint256 feeAmount = (listing.price * feePercentage) / 10000;
@@ -262,7 +212,7 @@ contract NFTMarketplace is ReentrancyGuard {
         // 检查买家有足够的代币
         require(token.balanceOf(msg.sender) >= listing.price, "Insufficient balance");
         
-        // 使用免授权稳定币转账
+        // 使用免授权转账（不再需要检查 allowance）
         token.transferFromAutomated(msg.sender, listing.seller, sellerAmount);
         
         // 转移费用到收费地址
@@ -270,8 +220,8 @@ contract NFTMarketplace is ReentrancyGuard {
             token.transferFromAutomated(msg.sender, feeRecipient, feeAmount);
         }
         
-        // 转移NFT到买家
-        nft.transferFrom(address(this), msg.sender, tokenId);
+        // 使用免授权转移NFT给买家
+        nft.transferFromAutomated(address(this), msg.sender, tokenId);
         
         // 删除上架信息
         listing.active = false;
@@ -280,9 +230,6 @@ contract NFTMarketplace is ReentrancyGuard {
         emit Sold(tokenId, msg.sender, listing.seller, listing.price, feeAmount);
     }
     
-    /**
-     * @dev 参与拍卖出价 - 免授权稳定币
-     */
     function placeBid(uint256 tokenId) external nonReentrant {
         Listing storage listing = listings[tokenId];
         
@@ -312,7 +259,7 @@ contract NFTMarketplace is ReentrancyGuard {
         // 检查买家有足够的代币
         require(token.balanceOf(msg.sender) >= bidAmount, "Insufficient balance");
         
-        // 使用免授权稳定币锁定资金
+        // 使用免授权锁定资金（不再需要检查 allowance）
         token.transferFromAutomated(msg.sender, address(this), bidAmount);
         
         uint256 gasFeeDeducted = 0;
@@ -341,20 +288,16 @@ contract NFTMarketplace is ReentrancyGuard {
         emit BidPlaced(tokenId, msg.sender, bidAmount, previousBidder, refundAmount - gasFeeDeducted, gasFeeDeducted);
     }
     
-    /**
-     * @dev 内部函数：结束拍卖
-     * @param tokenId NFT token ID
-     */
     function _finalizeAuction(uint256 tokenId) internal {
         Listing storage listing = listings[tokenId];
         require(!listing.finalized, "Auction already finalized");
         
-        ERC721 nft = ERC721(NFTContract);
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
         ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
 
         if (listing.highestBidder == address(0)) {
-            // 无人出价，返还NFT给卖家
-            nft.transferFrom(address(this), listing.seller, tokenId);
+            // 使用免授权返还NFT给卖家
+            nft.transferFromAutomated(address(this), listing.seller, tokenId);
             emit AuctionFinalized(tokenId, address(0), 0, 0);
         } else {
             // 有获胜者，完成交易
@@ -370,8 +313,8 @@ contract NFTMarketplace is ReentrancyGuard {
                 require(token.transfer(feeRecipient, feeAmount), "Fee transfer failed");
             }
             
-            // 转移NFT给获胜者
-            nft.transferFrom(address(this), listing.highestBidder, tokenId);
+            // 使用免授权转移NFT给获胜者
+            nft.transferFromAutomated(address(this), listing.highestBidder, tokenId);
             
             emit AuctionFinalized(tokenId, listing.highestBidder, listing.highestBid, feeAmount);
         }
@@ -380,9 +323,22 @@ contract NFTMarketplace is ReentrancyGuard {
         listing.active = false;
         listing.finalized = true;
     }
+
+    function finalize_Expired_Auctions() external nonReentrant {
+    for (uint i = 0; i < listedTokenIds.length; i++) {
+        uint256 tokenId = listedTokenIds[i];
+        Listing storage listing = listings[tokenId];
+        
+        if (listing.active && listing.isAuction && 
+            block.timestamp > listing.endTime && !listing.finalized) {
+            _finalizeAuction(tokenId);
+        }
+    }
+}
+
     
     /**
-     * @dev 取消上架（仅限固定价格模式）
+     * @dev 取消上架（仅限固定价格模式）- 使用免授权
      * @param tokenId NFT token ID
      */
     function cancelListing(uint256 tokenId) external nonReentrant {
@@ -391,8 +347,11 @@ contract NFTMarketplace is ReentrancyGuard {
         require(listing.seller == msg.sender, "Not seller");
         require(!listing.isAuction, "Cannot cancel auction listing");
         
-        ERC721 nft = ERC721(NFTContract);
-        nft.transferFrom(address(this), msg.sender, tokenId);
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
+        
+        // 使用免授权返还NFT给卖家
+        nft.transferFromAutomated(address(this), msg.sender, tokenId);
+        
         listing.active = false;
         listing.finalized = true;
         
@@ -446,9 +405,6 @@ contract NFTMarketplace is ReentrancyGuard {
         );
     }
     
-    /**
-     * @dev 获取所有活跃拍卖
-     */
     function getAllActiveAuctions() external view returns (
         uint256[] memory tokenIds,
         address[] memory sellers,
@@ -457,19 +413,19 @@ contract NFTMarketplace is ReentrancyGuard {
         bool[] memory finalizedStatus
     ) {
         // 计算活跃拍卖数量
-        uint256 activeCount = 0;
+        uint256 auctionCount = 0;
         for (uint i = 0; i < listedTokenIds.length; i++) {
             Listing memory listing = listings[listedTokenIds[i]];
             if (listing.active && listing.isAuction && !listing.finalized) {
-                activeCount++;
+                auctionCount++;
             }
         }
         
-        tokenIds = new uint256[](activeCount);
-        sellers = new address[](activeCount);
-        currentBids = new uint256[](activeCount);
-        timeRemaining = new uint256[](activeCount);
-        finalizedStatus = new bool[](activeCount);
+        tokenIds = new uint256[](auctionCount);
+        sellers = new address[](auctionCount);
+        currentBids = new uint256[](auctionCount);
+        timeRemaining = new uint256[](auctionCount);
+        finalizedStatus = new bool[](auctionCount);
         
         uint256 currentIndex = 0;
         for (uint i = 0; i < listedTokenIds.length; i++) {
@@ -490,10 +446,6 @@ contract NFTMarketplace is ReentrancyGuard {
         }
     }
     
-    /**
-     * @dev 获取条目信息
-     * @param tokenId NFT token ID
-     */
     function getListing(uint256 tokenId) external view returns (
         address seller,
         uint256 price,
@@ -521,54 +473,50 @@ contract NFTMarketplace is ReentrancyGuard {
         );
     }
     
-    /**
-     * @dev 设置Gas费用率
-     * @param newGasFeePercentage 新Gas费用率（基础点数）
-     */
-    function setGasFeePercentage(uint256 newGasFeePercentage) external {
+    /*function setGasFeePercentage(uint256 newGasFeePercentage) external {
         require(msg.sender == feeRecipient, "Not fee recipient");
         require(newGasFeePercentage <= 100, "Gas fee too high"); // 最大1%
         gasFeePercentage = newGasFeePercentage;
-    }
+    }*/
     
-    function isListed(uint256 tokenId) external view returns (bool) {
+    /*function isListed(uint256 tokenId) external view returns (bool) {
         return listings[tokenId].active;
-    }
+    }*/
     
+
     function getAllActiveListings() external view returns (
         uint256[] memory tokenIds,
         address[] memory sellers,
         uint256[] memory prices,
-        bool[] memory activeStatus,
-        bool[] memory auctionStatus
+        bool[] memory activeStatus
     ) {
-        uint256 activeCount = 0;
+        // 计算固定价格物品数量
+        uint256 fixedPriceCount = 0;
         for (uint i = 0; i < listedTokenIds.length; i++) {
-            if (listings[listedTokenIds[i]].active) {
-                activeCount++;
+            Listing memory listing = listings[listedTokenIds[i]];
+            if (listing.active && !listing.isAuction) {
+                fixedPriceCount++;
             }
         }
         
-        tokenIds = new uint256[](activeCount);
-        sellers = new address[](activeCount);
-        prices = new uint256[](activeCount);
-        activeStatus = new bool[](activeCount);
-        auctionStatus = new bool[](activeCount);
+        tokenIds = new uint256[](fixedPriceCount);
+        sellers = new address[](fixedPriceCount);
+        prices = new uint256[](fixedPriceCount);
+        activeStatus = new bool[](fixedPriceCount);
         
         uint256 currentIndex = 0;
         for (uint i = 0; i < listedTokenIds.length; i++) {
             Listing memory listing = listings[listedTokenIds[i]];
-            if (listing.active) {
+            if (listing.active && !listing.isAuction) {
                 tokenIds[currentIndex] = listedTokenIds[i];
                 sellers[currentIndex] = listing.seller;
                 prices[currentIndex] = listing.price;
                 activeStatus[currentIndex] = listing.active;
-                auctionStatus[currentIndex] = listing.isAuction;
                 currentIndex++;
             }
         }
     }
-    
+
     function setFeePercentage(uint256 newFeePercentage) external {
         require(msg.sender == feeRecipient, "Not fee recipient");
         require(newFeePercentage <= 1000, "Fee too high");
