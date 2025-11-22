@@ -324,6 +324,7 @@ contract NFTMarketplace is ReentrancyGuard {
         listing.finalized = true;
     }
 
+    //没办法自动结束拍卖，我就写了个批量结束，买方拍卖结束就点一下，时间到的所有拍卖就都结束了
     function finalize_Expired_Auctions() external nonReentrant {
     for (uint i = 0; i < listedTokenIds.length; i++) {
         uint256 tokenId = listedTokenIds[i];
