@@ -1,247 +1,498 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>COMP5521 合约测试平台</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>COMP5521 NFT 交易平台</title>
     <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
     <style>
+        :root {
+            --primary-color: #4a6cf7;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --dark-color: #343a40;
+            --light-color: #f8f9fa;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
         body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
+            background-color: #f5f7fb;
+            color: #333;
             line-height: 1.6;
         }
+        
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
-        }
-        .section {
-            margin: 20px 0;
             padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            background: white;
         }
-        button {
-            padding: 10px 20px;
-            font-size: 14px;
-            background: #f6851b;
+        
+        header {
+            background: linear-gradient(135deg, var(--primary-color), #6c5ce7);
             color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
         }
-        button:hover {
-            background: #e2761b;
+        
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
         }
-        button:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
+        
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card h2 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .card h3 {
+            color: var(--dark-color);
+            margin: 15px 0 10px;
+        }
+        
         .status {
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
             margin: 10px 0;
-            padding: 10px;
-            border-radius: 5px;
             font-weight: bold;
         }
+        
         .success {
-            background: #d4ffd4;
-            color: #006400;
-            border: 1px solid #00ff00;
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(40, 167, 69, 0.3);
         }
+        
         .error {
-            background: #ffd4d4;
-            color: #8b0000;
-            border: 1px solid #ff0000;
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+            border: 1px solid rgba(220, 53, 69, 0.3);
         }
+        
         .loading {
-            background: #fffacd;
-            color: #8b8000;
-            border: 1px solid #ffd700;
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+            border: 1px solid rgba(255, 193, 7, 0.3);
         }
-        input, textarea {
-            padding: 8px;
+        
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
             margin: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            width: 400px;
         }
-        .info-box {
-            background: #e8f4fd;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 10px 0;
+        
+        button:hover {
+            background-color: #3a5bd9;
+            transform: translateY(-2px);
         }
+        
+        button:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        
+        .btn-success {
+            background-color: var(--success-color);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: var(--dark-color);
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
         .contract-address {
             font-family: monospace;
+            background-color: #f1f3f9;
+            padding: 5px 10px;
+            border-radius: 4px;
             font-size: 12px;
-            background: #f0f0f0;
-            padding: 5px;
-            border-radius: 3px;
+            word-break: break-all;
         }
-        .tab {
-            overflow: hidden;
-            border: 1px solid #ccc;
-            background-color: #f1f1f1;
-            border-radius: 5px;
-        }
-        .tab button {
-            background-color: inherit;
-            float: left;
-            border: none;
-            outline: none;
-            cursor: pointer;
-            padding: 14px 16px;
-            transition: 0.3s;
-            color: #333;
-        }
-        .tab button:hover {
-            background-color: #ddd;
-        }
-        .tab button.active {
-            background-color: #ccc;
-        }
-        .tabcontent {
-            display: none;
-            padding: 6px 12px;
-            border: 1px solid #ccc;
-            border-top: none;
-            border-radius: 0 0 5px 5px;
-        }
-        .nft-item {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 10px 0;
-            background: white;
-        }
-        .grid {
+        
+        .wallet-info {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .wallet-info-item {
+            background-color: #f1f3f9;
+            padding: 10px;
+            border-radius: var(--border-radius);
+        }
+        
+        .wallet-info-item strong {
+            display: block;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+        
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 12px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--primary-color);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .nft-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
             gap: 20px;
             margin-top: 20px;
+        }
+        
+        .nft-card {
+            border: 1px solid #eee;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .nft-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nft-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .nft-info {
+            padding: 15px;
+        }
+        
+        .nft-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
+        
+        .nft-id {
+            color: var(--secondary-color);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        
+        .nft-owner {
+            font-size: 12px;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+        
+        .nft-price {
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .auction-info {
+            background-color: #fff9e6;
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        
+        .auction-info strong {
+            color: var(--warning-color);
+        }
+        
+        .marketplace-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .marketplace-actions button {
+            flex: 1;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .debug-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .contract-setup {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .contract-item {
+            background: white;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                border-bottom: 1px solid #ddd;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab.active {
+                border-left: 3px solid var(--primary-color);
+                border-bottom: 1px solid #ddd;
+            }
+            
+            .contract-setup {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="section">
-            <h1>🔗 COMP5521 合约测试平台</h1>
-            <p>测试稳定币、NFT和市场合约功能</p>
-        </div>
-
-        <!-- 连接钱包区域 -->
-        <div class="section">
-            <h2>🔗 步骤1: 连接钱包</h2>
-            <button onclick="connectMetaMask()" id="connectBtn">连接 MetaMask</button>
-            <div id="walletStatus"></div>
+        <header>
+            <h1>🎨 COMP5521 NFT 交易平台</h1>
+            <p>稳定币、NFT和市场合约交互测试平台</p>
+        </header>
+        
+        <!-- 钱包连接区域 -->
+        <div class="card">
+            <h2>🔗 连接钱包</h2>
+            <button id="connectBtn">连接 MetaMask</button>
+            <div id="walletStatus" class="status"></div>
+            
             <div id="walletInfo" style="display: none;">
-                <div class="info-box">
-                    <p><strong>钱包地址：</strong><span id="accountAddress" class="contract-address"></span></p>
-                    <p><strong>网络：</strong><span id="networkName"></span> | <strong>链ID：</strong><span id="chainId"></span></p>
+                <div class="wallet-info">
+                    <div class="wallet-info-item">
+                        <strong>钱包地址</strong>
+                        <span id="accountAddress" class="contract-address"></span>
+                    </div>
+                    <div class="wallet-info-item">
+                        <strong>网络</strong>
+                        <span id="networkName"></span>
+                    </div>
+                    <div class="wallet-info-item">
+                        <strong>链ID</strong>
+                        <span id="chainId"></span>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- 选项卡 -->
-        <div class="tab">
-            <button class="tablinks" onclick="openTab(event, 'Stablecoin')">💰 稳定币测试</button>
-            <button class="tablinks" onclick="openTab(event, 'NFT')">🎨 NFT测试</button>
-            <button class="tablinks" onclick="openTab(event, 'Marketplace')">🏪 市场测试</button>
-            <button class="tablinks" onclick="openTab(event, 'Debug')">🐛 调试信息</button>
+        
+        <!-- 合约地址设置 -->
+        <div class="card">
+            <h2>📝 合约地址设置</h2>
+            <div class="contract-setup">
+                <div class="contract-item">
+                    <h3>💰 稳定币合约</h3>
+                    <input type="text" id="stablecoinAddr" placeholder="0x..." class="contract-address">
+                    <button onclick="setStablecoinContract()">设置合约地址</button>
+                    <div id="stablecoinStatus" class="status"></div>
+                </div>
+                
+                <div class="contract-item">
+                    <h3>🎨 NFT合约</h3>
+                    <input type="text" id="nftAddr" placeholder="0x..." class="contract-address">
+                    <button onclick="setNFTContract()">设置合约地址</button>
+                    <div id="nftStatus" class="status"></div>
+                </div>
+                
+                <div class="contract-item">
+                    <h3>🏪 市场合约</h3>
+                    <input type="text" id="marketplaceAddr" placeholder="0x..." class="contract-address">
+                    <button onclick="setMarketplaceContract()">设置合约地址</button>
+                    <div id="marketplaceStatus" class="status"></div>
+                </div>
+            </div>
         </div>
-
+        
+        <!-- 标签页导航 -->
+        <div class="tabs">
+            <div class="tab active" data-tab="stablecoin">💰 稳定币测试</div>
+            <div class="tab" data-tab="nft">🎨 NFT测试</div>
+            <div class="tab" data-tab="marketplace">🏪 市场直接购买</div>
+            <div class="tab" data-tab="auction">⚡ 市场拍卖</div>
+            <div class="tab" data-tab="debug">🐛 调试信息</div>
+        </div>
+        
         <!-- 稳定币测试标签页 -->
-        <div id="Stablecoin" class="tabcontent">
-            <div class="section">
-                <h2>💰 稳定币合约测试</h2>
-                <p>在Remix中部署 COMP5521Dollar 合约后，将地址复制到这里：</p>
-                <input type="text" id="stablecoinAddr" placeholder="0x..." style="width: 500px;">
-                <button onclick="setStablecoinContract()">💾 设置合约地址</button>
-                <div id="stablecoinStatus"></div>
-            </div>
-
-            <div class="section">
-                <h3>稳定币功能测试</h3>
-                <button onclick="getTokenInfo()" id="tokenInfoBtn">🔍 获取代币信息</button>
-                <button onclick="useFaucet()" id="faucetBtn">🚰 领取测试代币</button>
-                <button onclick="checkBalance()" id="balanceBtn">💰 查询余额</button>
-                
-                <div id="stablecoinResults">
-                    <!-- 测试结果将显示在这里 -->
+        <div id="stablecoin" class="tab-content active">
+            <div class="card">
+                <h2>💰 稳定币功能测试</h2>
+                <div class="marketplace-actions">
+                    <button onclick="getTokenInfo()">🔍 获取代币信息</button>
+                    <button onclick="useFaucet()">🚰 领取测试代币</button>
+                    <button onclick="checkBalance()">💰 查询余额</button>
                 </div>
+                <div id="stablecoinResults" class="status"></div>
             </div>
         </div>
-
+        
         <!-- NFT测试标签页 -->
-        <div id="NFT" class="tabcontent">
-            <div class="section">
-                <h2>🎨 NFT合约测试</h2>
-                <p>在Remix中部署 COMP5521NFT 合约后，将地址复制到这里：</p>
-                <input type="text" id="nftAddr" placeholder="0x..." style="width: 500px;">
-                <button onclick="setNFTContract()">💾 设置NFT合约地址</button>
-                <div id="nftStatus"></div>
-            </div>
-
-            <div class="section">
-                <h3>NFT铸造功能</h3>
-                <label>元数据URI (GitHub RAW URL):</label><br>
-                <textarea id="tokenURI" rows="3" style="width: 500px;">https://raw.githubusercontent.com/chiyaqjh/comp5521/main/metadata/1.json</textarea><br>
+        <div id="nft" class="tab-content">
+            <div class="card">
+                <h2>🎨 NFT铸造功能</h2>
+                <div class="form-group">
+                    <label>元数据URI (GitHub RAW URL):</label>
+                    <textarea id="tokenURI" rows="3">https://raw.githubusercontent.com/chiyaqjh/comp5521/main/metadata/1.json</textarea>
+                </div>
                 <button onclick="mintNFT()">🛠️ 铸造NFT</button>
-                <div id="mintStatus"></div>
+                <div id="mintStatus" class="status"></div>
             </div>
-
-            <div class="section">
-                <h3>NFT查询功能</h3>
-                <button onclick="getNFTContractInfo()">📊 获取合约信息</button>
-                <button onclick="loadMyNFTs()">🔄 加载我的NFT</button>
-                <button onclick="getNextTokenId()">🔢 获取下一个Token ID</button>
-                
-                <div id="nftResults">
-                    <!-- NFT测试结果将显示在这里 -->
+            
+            <div class="card">
+                <h2>🔄 NFT查询功能</h2>
+                <div class="marketplace-actions">
+                    <button onclick="getNFTContractInfo()">📊 获取合约信息</button>
+                    <button onclick="loadMyNFTs()">🔄 加载我的NFT</button>
+                    <button onclick="getNextTokenId()">🔢 获取下一个Token ID</button>
                 </div>
+                <div id="nftResults" class="status"></div>
             </div>
-
-            <div class="section">
-                <h3>NFT详细信息查询</h3>
-                <label>Token ID:</label>
-                <input type="number" id="queryTokenId" value="0" style="width: 100px;">
+            
+            <div class="card">
+                <h2>🔍 NFT详细信息查询</h2>
+                <div class="form-group">
+                    <label>Token ID:</label>
+                    <input type="number" id="queryTokenId" value="0">
+                </div>
                 <button onclick="queryNFTInfo()">🔍 查询NFT信息</button>
-                <div id="nftQueryResults"></div>
+                <div id="nftQueryResults" class="status"></div>
             </div>
         </div>
-
-        <!-- 市场测试标签页 -->
-        <div id="Marketplace" class="tabcontent">
-            <div class="section">
-                <h2>🏪 市场合约测试</h2>
-                <p>在Remix中部署 NFTMarketplace 合约后，将地址复制到这里：</p>
-                <input type="text" id="marketplaceAddr" placeholder="0x..." style="width: 500px;">
-                <button onclick="setMarketplaceContract()">💾 设置市场合约地址</button>
-                <div id="marketplaceStatus"></div>
+        
+        <!-- 市场直接购买标签页 -->
+        <div id="marketplace" class="tab-content">
+            <div class="card">
+                <h2>🏪 市场直接购买</h2>
+                <button onclick="loadFixedPriceListings()">🔄 加载固定价格商品</button>
+                <div id="fixedPriceListings" class="nft-grid"></div>
             </div>
-
-            <div class="section">
-                <h3>市场功能测试</h3>
-                <button onclick="getMarketInfo()">📈 获取市场信息</button>
-                <div id="marketplaceResults">
-                    <!-- 市场测试结果将显示在这里 -->
+        </div>
+        
+        <!-- 市场拍卖标签页 -->
+        <div id="auction" class="tab-content">
+            <div class="card">
+                <h2>⚡ 市场拍卖</h2>
+                <div class="marketplace-actions">
+                    <button onclick="loadActiveAuctions()">🔄 加载活跃拍卖</button>
+                    <button onclick="finalizeExpiredAuctions()">⏰ 结束过期拍卖</button>
                 </div>
+                <div id="auctionListings" class="nft-grid"></div>
             </div>
         </div>
-
+        
         <!-- 调试信息标签页 -->
-        <div id="Debug" class="tabcontent">
-            <div class="section">
+        <div id="debug" class="tab-content">
+            <div class="card">
                 <h2>🐛 调试信息</h2>
-                <button onclick="clearDebug()">清空调试信息</button>
-                <button onclick="exportDebugInfo()">📤 导出调试信息</button>
-                <div id="debugInfo" style="font-family: monospace; font-size: 12px; background: #f5f5f5; padding: 10px; border-radius: 5px; max-height: 400px; overflow-y: auto;"></div>
+                <div class="marketplace-actions">
+                    <button onclick="clearDebug()">清空调试信息</button>
+                    <button onclick="exportDebugInfo()">📤 导出调试信息</button>
+                </div>
+                <div id="debugInfo" class="debug-info"></div>
             </div>
         </div>
     </div>
 
     <script>
+        // 全局变量
         let currentAccount = null;
         let web3 = null;
         let stablecoinContract = null;
@@ -251,7 +502,305 @@
         let marketplaceContract = null;
         let marketplaceAddress = null;
 
-        // 添加调试信息
+        // 稳定币合约ABI
+        const stablecoinABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "faucetAmount",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
+                "name": "balanceOf",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "useFaucet",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getTokenInfo",
+                "outputs": [
+                    {"internalType": "string", "name": "tokenName", "type": "string"},
+                    {"internalType": "string", "name": "tokenSymbol", "type": "string"},
+                    {"internalType": "uint256", "name": "tokenTotalSupply", "type": "uint256"},
+                    {"internalType": "address", "name": "tokenOwner", "type": "address"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // NFT合约ABI
+        const nftABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "to", "type": "address"},
+                    {"internalType": "string", "name": "metadataURI", "type": "string"}
+                ],
+                "name": "safeMint",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "ownerOf",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
+                "name": "tokenURI",
+                "outputs": [{"internalType": "string", "name": "", "type": "string"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getNextTokenId",
+                "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "getNFTInfo",
+                "outputs": [
+                    {"internalType": "address", "name": "tokenOwner", "type": "address"},
+                    {"internalType": "string", "name": "metadataURI", "type": "string"},
+                    {"internalType": "address", "name": "creator", "type": "address"},
+                    {"internalType": "uint256", "name": "createdTime", "type": "uint256"},
+                    {"internalType": "uint256", "name": "totalMinted", "type": "uint256"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "owner",
+                "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // 市场合约ABI
+        const marketplaceABI = [
+            {
+                "inputs": [
+                    {"internalType": "address", "name": "_stablecoin", "type": "address"},
+                    {"internalType": "address", "name": "_nftContract", "type": "address"}
+                ],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "inputs": [],
+                "name": "getMarketInfo",
+                "outputs": [
+                    {"internalType": "address", "name": "marketStablecoin", "type": "address"},
+                    {"internalType": "address", "name": "marketFeeRecipient", "type": "address"},
+                    {"internalType": "uint256", "name": "marketFeePercentage", "type": "uint256"},
+                    {"internalType": "uint256", "name": "marketGasFeePercentage", "type": "uint256"},
+                    {"internalType": "address", "name": "nftContract", "type": "address"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+                    {"internalType": "uint256", "name": "price", "type": "uint256"}
+                ],
+                "name": "listNFT",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"},
+                    {"internalType": "uint256", "name": "startPrice", "type": "uint256"},
+                    {"internalType": "uint256", "name": "duration", "type": "uint256"},
+                    {"internalType": "uint256", "name": "fixedBidIncrement", "type": "uint256"}
+                ],
+                "name": "listNFTForAuction",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "buyNFT",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "placeBid",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "finalize_Expired_Auctions",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "cancelListing",
+                "outputs": [],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "getAuctionStatus",
+                "outputs": [
+                    {"internalType": "bool", "name": "isActive", "type": "bool"},
+                    {"internalType": "uint256", "name": "timeRemaining", "type": "uint256"},
+                    {"internalType": "address", "name": "highestBidder", "type": "address"},
+                    {"internalType": "uint256", "name": "highestBid", "type": "uint256"},
+                    {"internalType": "uint256", "name": "nextBidAmount", "type": "uint256"},
+                    {"internalType": "uint256", "name": "fixedBidIncrement", "type": "uint256"},
+                    {"internalType": "uint256", "name": "startTime", "type": "uint256"},
+                    {"internalType": "uint256", "name": "endTime", "type": "uint256"},
+                    {"internalType": "bool", "name": "finalized", "type": "bool"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getAllActiveAuctions",
+                "outputs": [
+                    {"internalType": "uint256[]", "name": "tokenIds", "type": "uint256[]"},
+                    {"internalType": "address[]", "name": "sellers", "type": "address[]"},
+                    {"internalType": "uint256[]", "name": "currentBids", "type": "uint256[]"},
+                    {"internalType": "uint256[]", "name": "timeRemaining", "type": "uint256[]"},
+                    {"internalType": "bool[]", "name": "finalizedStatus", "type": "bool[]"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getAllActiveListings",
+                "outputs": [
+                    {"internalType": "uint256[]", "name": "tokenIds", "type": "uint256[]"},
+                    {"internalType": "address[]", "name": "sellers", "type": "address[]"},
+                    {"internalType": "uint256[]", "name": "prices", "type": "uint256[]"},
+                    {"internalType": "bool[]", "name": "activeStatus", "type": "bool[]"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
+                ],
+                "name": "getListing",
+                "outputs": [
+                    {"internalType": "address", "name": "seller", "type": "address"},
+                    {"internalType": "uint256", "name": "price", "type": "uint256"},
+                    {"internalType": "bool", "name": "active", "type": "bool"},
+                    {"internalType": "bool", "name": "isAuction", "type": "bool"},
+                    {"internalType": "uint256", "name": "startTime", "type": "uint256"},
+                    {"internalType": "uint256", "name": "endTime", "type": "uint256"},
+                    {"internalType": "address", "name": "highestBidder", "type": "address"},
+                    {"internalType": "uint256", "name": "highestBid", "type": "uint256"},
+                    {"internalType": "uint256", "name": "fixedBidIncrement", "type": "uint256"},
+                    {"internalType": "bool", "name": "finalized", "type": "bool"}
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ];
+
+        // 辅助函数
         function addDebugInfo(message) {
             const debugDiv = document.getElementById('debugInfo');
             const timestamp = new Date().toLocaleTimeString();
@@ -259,12 +808,10 @@
             debugDiv.scrollTop = debugDiv.scrollHeight;
         }
 
-        // 清空调试信息
         function clearDebug() {
             document.getElementById('debugInfo').innerHTML = '';
         }
 
-        // 导出调试信息
         function exportDebugInfo() {
             const debugInfo = document.getElementById('debugInfo').innerText;
             const blob = new Blob([debugInfo], { type: 'text/plain' });
@@ -276,7 +823,6 @@
             URL.revokeObjectURL(url);
         }
 
-        // 显示状态信息
         function showStatus(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = message;
@@ -284,23 +830,53 @@
             addDebugInfo(`${elementId}: ${message}`);
         }
 
-        // 显示测试结果
         function showTestResult(elementId, message, type) {
             const element = document.getElementById(elementId);
             element.innerHTML = `<div class="status ${type}">${message}</div>`;
             addDebugInfo(`${elementId}: ${message}`);
         }
 
-        // 检查 MetaMask 是否安装
-        function isMetaMaskInstalled() {
-            return typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask;
+        function isValidAddress(address) {
+            return /^0x[a-fA-F0-9]{40}$/.test(address);
         }
 
-        // 连接 MetaMask
+        function getNetworkName(chainId) {
+            const networks = {
+                '0x1': '以太坊主网',
+                '0xaa36a7': 'Sepolia测试网',
+                '0x5': 'Goerli测试网',
+                '0x539': '本地开发网络'
+            };
+            return networks[chainId] || `未知网络 (${chainId})`;
+        }
+
+        // 标签页切换功能
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 移除所有标签页的active类
+                document.querySelectorAll('.tab').forEach(t => {
+                    t.classList.remove('active');
+                });
+                
+                // 隐藏所有标签内容
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // 激活当前标签
+                tab.classList.add('active');
+                
+                // 显示对应的标签内容
+                const tabId = tab.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+
+        // 钱包连接功能
         async function connectMetaMask() {
             const connectBtn = document.getElementById('connectBtn');
             
-            if (!isMetaMaskInstalled()) {
+            if (typeof window.ethereum === 'undefined') {
                 showStatus('walletStatus', '❌ 未检测到 MetaMask，请先安装 MetaMask 浏览器扩展', 'error');
                 connectBtn.disabled = true;
                 return;
@@ -310,7 +886,6 @@
                 showStatus('walletStatus', '🔄 正在连接 MetaMask...', 'loading');
                 connectBtn.disabled = true;
                 
-                // 初始化web3
                 web3 = new Web3(window.ethereum);
                 addDebugInfo('Web3 初始化完成');
                 
@@ -347,7 +922,7 @@
             }
         }
 
-        // ========== 稳定币合约函数 ==========
+        // 稳定币合约函数
         function setStablecoinContract() {
             const address = document.getElementById('stablecoinAddr').value.trim();
             
@@ -362,83 +937,12 @@
             }
             
             try {
-                // 稳定币合约ABI
-                const stablecoinABI = [
-                    {
-                        "inputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "constructor"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "faucetAmount",
-                        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "name",
-                        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "symbol",
-                        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "decimals",
-                        "outputs": [{"internalType": "uint8", "name": "", "type": "uint8"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "totalSupply",
-                        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [{"internalType": "address", "name": "account", "type": "address"}],
-                        "name": "balanceOf",
-                        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "useFaucet",
-                        "outputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "getTokenInfo",
-                        "outputs": [
-                            {"internalType": "string", "name": "tokenName", "type": "string"},
-                            {"internalType": "string", "name": "tokenSymbol", "type": "string"},
-                            {"internalType": "uint256", "name": "tokenTotalSupply", "type": "uint256"},
-                            {"internalType": "address", "name": "tokenOwner", "type": "address"}
-                        ],
-                        "stateMutability": "view",
-                        "type": "function"
-                    }
-                ];
-                
                 stablecoinAddress = address;
                 stablecoinContract = new web3.eth.Contract(stablecoinABI, address);
                 
                 showStatus('stablecoinStatus', '✅ 稳定币合约设置成功！', 'success');
                 addDebugInfo(`稳定币合约地址: ${address}`);
                 
-                // 自动测试合约连接
                 testStablecoinConnection();
                 
             } catch (error) {
@@ -508,7 +1012,6 @@
                 showTestResult('stablecoinResults', `✅ 成功领取测试代币！<br>交易哈希: ${result.transactionHash}`, 'success');
                 addDebugInfo(`水龙头交易: ${result.transactionHash}`);
                 
-                // 自动查询余额
                 setTimeout(checkBalance, 2000);
                 
             } catch (error) {
@@ -540,7 +1043,7 @@
             }
         }
 
-        // ========== NFT合约函数 ==========
+        // NFT合约函数
         function setNFTContract() {
             const address = document.getElementById('nftAddr').value.trim();
             
@@ -555,96 +1058,12 @@
             }
             
             try {
-                // NFT合约ABI - 根据您提供的COMP5521NFT合约
-                const nftABI = [
-                    {
-                        "inputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "constructor"
-                    },
-                    {
-                        "inputs": [
-                            {"internalType": "address", "name": "to", "type": "address"},
-                            {"internalType": "string", "name": "metadataURI", "type": "string"}
-                        ],
-                        "name": "safeMint",
-                        "outputs": [],
-                        "stateMutability": "nonpayable",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "name",
-                        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "symbol",
-                        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-                        "name": "ownerOf",
-                        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [{"internalType": "uint256", "name": "tokenId", "type": "uint256"}],
-                        "name": "tokenURI",
-                        "outputs": [{"internalType": "string", "name": "", "type": "string"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "totalSupply",
-                        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "getNextTokenId",
-                        "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [
-                            {"internalType": "uint256", "name": "tokenId", "type": "uint256"}
-                        ],
-                        "name": "getNFTInfo",
-                        "outputs": [
-                            {"internalType": "address", "name": "tokenOwner", "type": "address"},
-                            {"internalType": "string", "name": "metadataURI", "type": "string"},
-                            {"internalType": "address", "name": "creator", "type": "address"},
-                            {"internalType": "uint256", "name": "createdTime", "type": "uint256"},
-                            {"internalType": "uint256", "name": "totalMinted", "type": "uint256"}
-                        ],
-                        "stateMutability": "view",
-                        "type": "function"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "owner",
-                        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
-                        "stateMutability": "view",
-                        "type": "function"
-                    }
-                ];
-                
                 nftAddress = address;
                 nftContract = new web3.eth.Contract(nftABI, address);
                 
                 showStatus('nftStatus', '✅ NFT合约设置成功！', 'success');
                 addDebugInfo(`NFT合约地址: ${address}`);
                 
-                // 自动测试NFT合约连接
                 testNFTConnection();
                 
             } catch (error) {
@@ -694,7 +1113,6 @@
                 showStatus('mintStatus', `✅ NFT铸造成功！<br>交易哈希: ${result.transactionHash}`, 'success');
                 addDebugInfo(`NFT铸造交易: ${result.transactionHash}`);
                 
-                // 自动刷新NFT信息
                 setTimeout(() => {
                     getNFTContractInfo();
                     loadMyNFTs();
@@ -760,11 +1178,31 @@
                         const owner = await nftContract.methods.ownerOf(i).call();
                         if (owner.toLowerCase() === currentAccount.toLowerCase()) {
                             const tokenURI = await nftContract.methods.tokenURI(i).call();
+                            
+                            // 获取NFT元数据
+                            let nftImage = '';
+                            let nftName = `NFT #${i}`;
+                            
+                            try {
+                                const response = await fetch(tokenURI);
+                                if (response.ok) {
+                                    const metadata = await response.json();
+                                    nftImage = metadata.image || '';
+                                    nftName = metadata.name || nftName;
+                                }
+                            } catch (e) {
+                                addDebugInfo(`获取NFT #${i} 元数据失败: ${e.message}`);
+                            }
+                            
                             nftsHTML += `
-                                <div class="nft-item">
-                                    <h4>NFT #${i}</h4>
-                                    <p><strong>TokenURI:</strong> ${tokenURI}</p>
-                                    <p><strong>所有者:</strong> ${owner}</p>
+                                <div class="nft-card">
+                                    ${nftImage ? `<img src="${nftImage}" alt="${nftName}" class="nft-image">` : ''}
+                                    <div class="nft-info">
+                                        <div class="nft-title">${nftName}</div>
+                                        <div class="nft-id">Token ID: ${i}</div>
+                                        <div class="nft-owner">所有者: ${owner.substring(0, 8)}...${owner.substring(owner.length - 6)}</div>
+                                        <div class="nft-owner">元数据URI: ${tokenURI}</div>
+                                    </div>
                                 </div>
                             `;
                             foundNFTs++;
@@ -818,14 +1256,37 @@
                 
                 const nftInfo = await nftContract.methods.getNFTInfo(tokenId).call();
                 
-                // 直接使用字符串显示，避免类型转换
+                // 获取NFT元数据
+                let nftImage = '';
+                let nftName = `NFT #${tokenId}`;
+                let nftDescription = '';
+                
+                try {
+                    const response = await fetch(nftInfo.metadataURI);
+                    if (response.ok) {
+                        const metadata = await response.json();
+                        nftImage = metadata.image || '';
+                        nftName = metadata.name || nftName;
+                        nftDescription = metadata.description || '';
+                    }
+                } catch (e) {
+                    addDebugInfo(`获取NFT #${tokenId} 元数据失败: ${e.message}`);
+                }
+                
                 const result = `
-                    ✅ NFT #${tokenId} 信息获取成功！<br>
-                    <strong>当前所有者:</strong> ${nftInfo.tokenOwner}<br>
-                    <strong>元数据URI:</strong> ${nftInfo.metadataURI}<br>
-                    <strong>创作者:</strong> ${nftInfo.creator}<br>
-                    <strong>创建时间:</strong> 时间戳: ${nftInfo.createdTime}<br>
-                    <strong>下一个Token ID:</strong> ${nftInfo.totalMinted}
+                    <div class="nft-card">
+                        ${nftImage ? `<img src="${nftImage}" alt="${nftName}" class="nft-image">` : ''}
+                        <div class="nft-info">
+                            <div class="nft-title">${nftName}</div>
+                            ${nftDescription ? `<div class="nft-id">${nftDescription}</div>` : ''}
+                            <div class="nft-id">Token ID: ${tokenId}</div>
+                            <div class="nft-owner">当前所有者: ${nftInfo.tokenOwner}</div>
+                            <div class="nft-owner">创作者: ${nftInfo.creator}</div>
+                            <div class="nft-owner">创建时间: ${new Date(nftInfo.createdTime * 1000).toLocaleString()}</div>
+                            <div class="nft-owner">元数据URI: ${nftInfo.metadataURI}</div>
+                            <div class="nft-owner">总铸造数量: ${nftInfo.totalMinted}</div>
+                        </div>
+                    </div>
                 `;
                 
                 showTestResult('nftQueryResults', result, 'success');
@@ -834,11 +1295,10 @@
             } catch (error) {
                 showTestResult('nftQueryResults', '❌ 查询NFT信息失败: ' + error.message, 'error');
                 addDebugInfo(`查询NFT信息错误: ${error.message}`);
-                }
             }
+        }
 
-
-        // ========== 市场合约函数 ==========
+        // 市场合约函数
         function setMarketplaceContract() {
             const address = document.getElementById('marketplaceAddr').value.trim();
             
@@ -853,26 +1313,6 @@
             }
             
             try {
-                // 市场合约ABI - 简化版，根据实际合约调整
-                const marketplaceABI = [
-                    {
-                        "inputs": [{"internalType": "address", "name": "_stablecoin", "type": "address"}],
-                        "stateMutability": "nonpayable",
-                        "type": "constructor"
-                    },
-                    {
-                        "inputs": [],
-                        "name": "getMarketInfo",
-                        "outputs": [
-                            {"internalType": "address", "name": "marketStablecoin", "type": "address"},
-                            {"internalType": "address", "name": "marketFeeRecipient", "type": "address"},
-                            {"internalType": "uint256", "name": "marketFeePercentage", "type": "uint256"}
-                        ],
-                        "stateMutability": "view",
-                        "type": "function"
-                    }
-                ];
-                
                 marketplaceAddress = address;
                 marketplaceContract = new web3.eth.Contract(marketplaceABI, address);
                 
@@ -885,69 +1325,323 @@
             }
         }
 
-        async function getMarketInfo() {
+
+        // 加载固定价格商品
+        async function loadFixedPriceListings() {
             if (!marketplaceContract) {
-                showTestResult('marketplaceResults', '❌ 请先设置市场合约地址', 'error');
+                alert('请先设置市场合约地址');
                 return;
             }
             
             try {
-                showTestResult('marketplaceResults', '🔄 获取市场信息中...', 'loading');
+                const listingsContainer = document.getElementById('fixedPriceListings');
+                listingsContainer.innerHTML = '<div class="status loading">🔄 加载固定价格商品中...</div>';
                 
-                const marketInfo = await marketplaceContract.methods.getMarketInfo().call();
+                const result = await marketplaceContract.methods.getAllActiveListings().call();
                 
-                const result = `
-                    ✅ 市场信息获取成功！<br>
-                    <strong>稳定币地址:</strong> ${marketInfo.marketStablecoin}<br>
-                    <strong>费用接收地址:</strong> ${marketInfo.marketFeeRecipient}<br>
-                    <strong>手续费率:</strong> ${marketInfo.marketFeePercentage / 100}%
-                `;
+                // 正确处理BigInt转换
+                const tokenIds = result[0].map(id => Number(id));
+                const sellers = result[1];
+                const prices = result[2].map(price => Number(price));
+                const activeStatus = result[3];
                 
-                showTestResult('marketplaceResults', result, 'success');
-                addDebugInfo(`市场信息查询成功`);
+                console.log("固定价格商品数据:", { tokenIds, sellers, prices, activeStatus });
+                
+                if (tokenIds.length === 0) {
+                    listingsContainer.innerHTML = '<div class="status">暂无固定价格商品</div>';
+                    return;
+                }
+                
+                let listingsHTML = '';
+                
+                for (let i = 0; i < tokenIds.length; i++) {
+                    if (!activeStatus[i]) continue;
+                    
+                    const tokenId = tokenIds[i];
+                    const seller = sellers[i];
+                    const price = prices[i];
+                    
+                    // 获取NFT信息
+                    let nftImage = '';
+                    let nftName = `NFT #${tokenId}`;
+                    let nftDescription = '';
+                    
+                    try {
+                        const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
+                        console.log(`NFT #${tokenId} URI:`, tokenURI);
+                        
+                        const response = await fetch(tokenURI);
+                        if (response.ok) {
+                            const metadata = await response.json();
+                            nftImage = metadata.image || '';
+                            nftName = metadata.name || nftName;
+                            nftDescription = metadata.description || '';
+                        }
+                    } catch (e) {
+                        console.error(`获取NFT #${tokenId} 元数据失败:`, e);
+                        addDebugInfo(`获取NFT #${tokenId} 元数据失败: ${e.message}`);
+                    }
+                    
+                    // 直接显示价格，不需要转换（因为价格已经是标准单位）
+                    // 如果你在合约中设置的价格是100，这里直接显示100
+                    const displayPrice = price;
+                    
+                    listingsHTML += `
+                        <div class="nft-card">
+                            ${nftImage ? `<img src="${nftImage}" alt="${nftName}" class="nft-image">` : ''}
+                            <div class="nft-info">
+                                <div class="nft-title">${nftName}</div>
+                                ${nftDescription ? `<div class="nft-id">${nftDescription}</div>` : ''}
+                                <div class="nft-id">Token ID: ${tokenId}</div>
+                                <div class="nft-owner">卖家: ${seller.substring(0, 8)}...${seller.substring(seller.length - 6)}</div>
+                                <div class="nft-price">价格: ${displayPrice} C5D</div>
+                                <div class="marketplace-actions">
+                                    <button class="btn-success" onclick="buyNFT(${tokenId})">购买</button>
+                                    ${seller.toLowerCase() === currentAccount.toLowerCase() ? 
+                                        `<button class="btn-danger" onclick="cancelListing(${tokenId})">取消上架</button>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                listingsContainer.innerHTML = listingsHTML;
                 
             } catch (error) {
-                showTestResult('marketplaceResults', '❌ 获取市场信息失败: ' + error.message, 'error');
-                addDebugInfo(`获取市场信息错误: ${error.message}`);
+                console.error('加载固定价格商品失败:', error);
+                document.getElementById('fixedPriceListings').innerHTML = `<div class="status error">❌ 加载固定价格商品失败: ${error.message}</div>`;
+                addDebugInfo(`加载固定价格商品错误: ${error.message}`);
             }
         }
 
-        // ========== 工具函数 ==========
-        function getNetworkName(chainId) {
-            const networks = {
-                '0x1': '以太坊主网',
-                '0xaa36a7': 'Sepolia测试网',
-                '0x5': 'Goerli测试网',
-                '0x539': '本地开发网络'
-            };
-            return networks[chainId] || `未知网络 (${chainId})`;
+        // 加载活跃拍卖
+        async function loadActiveAuctions() {
+    if (!marketplaceContract) {
+        alert('请先设置市场合约地址');
+        return;
+    }
+    
+    try {
+        const auctionsContainer = document.getElementById('auctionListings');
+        auctionsContainer.innerHTML = '<div class="status loading">🔄 加载活跃拍卖中...</div>';
+        
+        const result = await marketplaceContract.methods.getAllActiveAuctions().call();
+        
+        // 正确处理BigInt转换
+        const tokenIds = result[0].map(id => Number(id));
+        const sellers = result[1];
+        const currentBids = result[2].map(bid => Number(bid));
+        const timeRemaining = result[3].map(time => Number(time));
+        const finalizedStatus = result[4];
+        
+        console.log("拍卖数据:", { tokenIds, sellers, currentBids, timeRemaining, finalizedStatus });
+        
+        if (tokenIds.length === 0) {
+            auctionsContainer.innerHTML = '<div class="status">暂无活跃拍卖</div>';
+            return;
         }
-
-        function isValidAddress(address) {
-            return /^0x[a-fA-F0-9]{40}$/.test(address);
-        }
-
-        // 选项卡功能
-        function openTab(evt, tabName) {
-            const tabcontent = document.getElementsByClassName("tabcontent");
-            for (let i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
+        
+        let auctionsHTML = '';
+        
+        for (let i = 0; i < tokenIds.length; i++) {
+            if (finalizedStatus[i]) continue;
+            
+            const tokenId = tokenIds[i];
+            const seller = sellers[i];
+            const currentBid = currentBids[i];
+            const remainingTime = timeRemaining[i];
+            
+            // 获取NFT信息
+            let nftImage = '';
+            let nftName = `NFT #${tokenId}`;
+            let nftDescription = '';
+            
+            try {
+                const tokenURI = await nftContract.methods.tokenURI(tokenId).call();
+                console.log(`NFT #${tokenId} URI:`, tokenURI);
+                
+                const response = await fetch(tokenURI);
+                if (response.ok) {
+                    const metadata = await response.json();
+                    nftImage = metadata.image || '';
+                    nftName = metadata.name || nftName;
+                    nftDescription = metadata.description || '';
+                }
+            } catch (e) {
+                console.error(`获取NFT #${tokenId} 元数据失败:`, e);
+                addDebugInfo(`获取NFT #${tokenId} 元数据失败: ${e.message}`);
             }
             
-            const tablinks = document.getElementsByClassName("tablinks");
-            for (let i = 0; i < tablinks.length; i++) {
-                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            // 获取拍卖详细信息
+            let auctionStatus;
+            try {
+                auctionStatus = await marketplaceContract.methods.getAuctionStatus(tokenId).call();
+                console.log(`NFT #${tokenId} 拍卖状态:`, auctionStatus);
+            } catch (e) {
+                console.error(`获取NFT #${tokenId} 拍卖状态失败:`, e);
+                auctionStatus = [false, 0, '0x0000000000000000000000000000000000000000', 0, 0, 0, 0, 0, false];
             }
             
-            document.getElementById(tabName).style.display = "block";
-            evt.currentTarget.className += " active";
+            // 正确处理拍卖状态中的BigInt
+            const isActive = auctionStatus[0];
+            const timeRemainingSec = Number(auctionStatus[1]);
+            const highestBidder = auctionStatus[2];
+            const highestBid = Number(auctionStatus[3]);
+            const nextBidAmount = Number(auctionStatus[4]);
+            const fixedBidIncrement = Number(auctionStatus[5]);
+            
+            // 格式化时间显示
+            const minutes = Math.floor(timeRemainingSec / 60);
+            const seconds = timeRemainingSec % 60;
+            const timeDisplay = `${minutes} 分钟 ${seconds} 秒`;
+            
+            // 检查是否已经有人出价
+            const hasBids = highestBidder !== '0x0000000000000000000000000000000000000000' && highestBid > 0;
+            
+            // 直接显示价格，不需要转换
+            const displayCurrentBid = currentBid;
+            const displayNextBid = nextBidAmount;
+            const displayFixedIncrement = fixedBidIncrement;
+            
+            auctionsHTML += `
+                <div class="nft-card">
+                    ${nftImage ? `<img src="${nftImage}" alt="${nftName}" class="nft-image">` : ''}
+                    <div class="nft-info">
+                        <div class="nft-title">${nftName}</div>
+                        ${nftDescription ? `<div class="nft-id">${nftDescription}</div>` : ''}
+                        <div class="nft-id">Token ID: ${tokenId}</div>
+                        <div class="nft-owner">卖家: ${seller.substring(0, 8)}...${seller.substring(seller.length - 6)}</div>
+                        <div class="auction-info">
+                            <div><strong>当前最高出价:</strong> ${displayCurrentBid} C5D</div>
+                            <div><strong>下一次出价:</strong> ${displayNextBid} C5D</div>
+                            <div><strong>剩余时间:</strong> ${timeDisplay}</div>
+                            <div><strong>固定加价:</strong> ${displayFixedIncrement} C5D</div>
+                            ${hasBids ? 
+                                `<div><strong>最高出价者:</strong> ${highestBidder.substring(0, 8)}...${highestBidder.substring(highestBidder.length - 6)}</div>` : 
+                                '<div><strong>状态:</strong> 暂无出价</div>'}
+                            ${hasBids ? '<div class="status error" style="margin-top: 10px; padding: 8px; font-size: 12px;"><strong>⚠️ 注意:</strong> 已有出价，拍卖无法取消</div>' : ''}
+                        </div>
+                        <div class="marketplace-actions">
+                            <button class="btn-warning" onclick="placeBid(${tokenId})">出价</button>
+                            <!-- 完全移除取消拍卖按钮 -->
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        auctionsContainer.innerHTML = auctionsHTML;
+        
+    } catch (error) {
+        console.error('加载活跃拍卖失败:', error);
+        document.getElementById('auctionListings').innerHTML = `<div class="status error">❌ 加载活跃拍卖失败: ${error.message}</div>`;
+        addDebugInfo(`加载活跃拍卖错误: ${error.message}`);
+    }
+}
+        
+        async function buyNFT(tokenId) {
+            if (!marketplaceContract || !currentAccount) {
+                alert('请先连接钱包并设置市场合约');
+                return;
+            }
+            
+            try {
+                const result = await marketplaceContract.methods.buyNFT(tokenId).send({
+                    from: currentAccount
+                });
+                
+                alert(`购买成功！交易哈希: ${result.transactionHash}`);
+                addDebugInfo(`购买NFT #${tokenId} 交易: ${result.transactionHash}`);
+                
+                // 刷新列表
+                loadFixedPriceListings();
+                
+            } catch (error) {
+                alert(`购买失败: ${error.message}`);
+                addDebugInfo(`购买NFT #${tokenId} 错误: ${error.message}`);
+            }
+        }
+
+        // 出价
+        async function placeBid(tokenId) {
+            if (!marketplaceContract || !currentAccount) {
+                alert('请先连接钱包并设置市场合约');
+                return;
+            }
+            
+            try {
+                const result = await marketplaceContract.methods.placeBid(tokenId).send({
+                    from: currentAccount
+                });
+                
+                alert(`出价成功！交易哈希: ${result.transactionHash}`);
+                addDebugInfo(`对NFT #${tokenId} 出价交易: ${result.transactionHash}`);
+                
+                // 刷新列表
+                loadActiveAuctions();
+                
+            } catch (error) {
+                alert(`出价失败: ${error.message}`);
+                addDebugInfo(`对NFT #${tokenId} 出价错误: ${error.message}`);
+            }
+        }
+
+        // 取消上架
+        async function cancelListing(tokenId) {
+            if (!marketplaceContract || !currentAccount) {
+                alert('请先连接钱包并设置市场合约');
+                return;
+            }
+            
+            try {
+                const result = await marketplaceContract.methods.cancelListing(tokenId).send({
+                    from: currentAccount
+                });
+                
+                alert(`取消上架成功！交易哈希: ${result.transactionHash}`);
+                addDebugInfo(`取消NFT #${tokenId} 上架交易: ${result.transactionHash}`);
+                
+                // 刷新列表
+                loadFixedPriceListings();
+                
+            } catch (error) {
+                alert(`取消上架失败: ${error.message}`);
+                addDebugInfo(`取消NFT #${tokenId} 上架错误: ${error.message}`);
+            }
+        }
+
+        // 结束过期拍卖
+        async function finalizeExpiredAuctions() {
+            if (!marketplaceContract || !currentAccount) {
+                alert('请先连接钱包并设置市场合约');
+                return;
+            }
+            
+            try {
+                const result = await marketplaceContract.methods.finalize_Expired_Auctions().send({
+                    from: currentAccount
+                });
+                
+                alert(`结束过期拍卖成功！交易哈希: ${result.transactionHash}`);
+                addDebugInfo(`结束过期拍卖交易: ${result.transactionHash}`);
+                
+                // 刷新列表
+                loadActiveAuctions();
+                
+            } catch (error) {
+                alert(`结束过期拍卖失败: ${error.message}`);
+                addDebugInfo(`结束过期拍卖错误: ${error.message}`);
+            }
         }
 
         // 页面加载时初始化
         window.addEventListener('load', function() {
             addDebugInfo('页面加载完成');
             
-            if (isMetaMaskInstalled()) {
+            // 设置连接钱包按钮事件
+            document.getElementById('connectBtn').addEventListener('click', connectMetaMask);
+            
+            if (typeof window.ethereum !== 'undefined') {
                 showStatus('walletStatus', '✅ 已检测到 MetaMask，点击上方按钮连接', 'success');
                 
                 // 监听账户变化
@@ -976,9 +1670,6 @@
                 showStatus('walletStatus', '❌ 未检测到 MetaMask，请安装 MetaMask 扩展', 'error');
                 document.getElementById('connectBtn').disabled = true;
             }
-            
-            // 默认打开第一个标签页
-            document.getElementsByClassName('tablinks')[0].click();
         });
     </script>
 </body>
