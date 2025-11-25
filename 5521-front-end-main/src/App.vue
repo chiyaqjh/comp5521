@@ -92,11 +92,11 @@ export default {
     return {
       activeTab: 'stablecoin',
       tabs: [
-        { id: 'stablecoin', label: '💰 稳定币测试' },
-        { id: 'nft', label: '🎨 NFT测试' },
-        { id: 'marketplace', label: '🏪 市场直接购买' },
-        { id: 'auction', label: '⚡ 市场拍卖' },
-        { id: 'debug', label: '🐛 调试信息' },
+        { id: 'stablecoin', label: '稳定币测试' },
+        { id: 'nft', label: 'NFT测试' },
+        { id: 'marketplace', label: '市场直接购买' },
+        { id: 'auction', label: '市场拍卖' },
+        { id: 'debug', label: '调试信息' },
       ],
       stablecoinContract: null,
       nftContract: null,
