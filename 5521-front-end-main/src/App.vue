@@ -2,7 +2,7 @@
   <div class="container">
     <!-- 页面头部 -->
     <header>
-      <h1>🎨 COMP5521 NFT 交易平台</h1>
+      <h1>COMP5521 NFT 交易平台</h1>
       <p>稳定币、NFT和市场合约交互测试平台</p>
     </header>
 

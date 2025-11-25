@@ -1,10 +1,10 @@
 <template>
   <div class="card">
-    <h2>🏪 市场直接购买</h2>
+    <h2> 市场直接购买</h2>
     
     <!-- 上架功能 -->
     <div class="listing-section">
-      <h3>📤 上架我的NFT</h3>
+      <h3>上架我的NFT</h3>
       <div class="form-group">
         <label>Token ID:</label>
         <input type="number" v-model="listTokenId" />
@@ -19,7 +19,7 @@
       <div :class="['status', listStatusType]" v-if="listMessage" v-html="listMessage"></div>
     </div>
 
-    <button @click="loadFixedPriceListings">🔄 加载固定价格商品</button>
+    <button @click="loadFixedPriceListings">加载固定价格商品</button>
     
     <div class="nft-grid" v-if="listings.length > 0">
       <div v-for="listing in listings" :key="listing.tokenId" class="nft-card">
@@ -47,7 +47,7 @@
       </div>
     </div>
     <div v-else-if="!loading" class="status">暂无固定价格商品</div>
-    <div v-else class="status loading">🔄 加载中...</div>
+    <div v-else class="status loading">加载中...</div>
   </div>
 </template>
 
@@ -83,14 +83,14 @@ export default {
     // 上架NFT功能
     async listNFT() {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        this.listMessage = '❌ 请先连接钱包并设置市场合约'
+        this.listMessage = ' 请先连接钱包并设置市场合约'
         this.listStatusType = 'error'
         return
       }
 
       this.listingInProgress = true
       try {
-        this.listMessage = '🔄 上架NFT中...'
+        this.listMessage = '加载中...'
         this.listStatusType = 'loading'
 
         // 直接上架NFT，不进行任何检查
@@ -100,7 +100,7 @@ export default {
             from: web3Service.getAccount(),
           })
 
-        this.listMessage = `✅ NFT上架成功！<br>交易哈希: ${result.transactionHash}`
+        this.listMessage = `NFT上架成功！<br>交易哈希: ${result.transactionHash}`
         this.listStatusType = 'success'
         this.$emit('debug-info', `NFT #${this.listTokenId} 上架交易: ${result.transactionHash}`)
 
@@ -114,7 +114,7 @@ export default {
         }, 2000)
 
       } catch (error) {
-        this.listMessage = '❌ 上架失败: ' + error.message
+        this.listMessage = '上架失败: ' + error.message
         this.listStatusType = 'error'
         this.$emit('debug-info', `上架NFT错误: ${error.message}`)
       } finally {

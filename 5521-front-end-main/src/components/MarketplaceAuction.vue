@@ -4,7 +4,7 @@
     
     <!-- 上架拍卖功能 -->
     <div class="listing-section">
-      <h3>📤 上架拍卖我的NFT</h3>
+      <h3>上架拍卖我的NFT</h3>
       <div class="form-row">
         <div class="form-group">
           <label>Token ID:</label>
@@ -32,8 +32,8 @@
     </div>
 
     <div class="marketplace-actions">
-      <button @click="loadActiveAuctions">🔄 加载活跃拍卖</button>
-      <button @click="finalizeExpiredAuctions">⏰ 结束过期拍卖</button>
+      <button @click="loadActiveAuctions">加载活跃拍卖</button>
+      <button @click="finalizeExpiredAuctions">结束过期拍卖</button>
     </div>
     
     <div class="nft-grid" v-if="auctions.length > 0">
@@ -63,7 +63,7 @@
               class="status error"
               style="margin-top: 10px; padding: 8px; font-size: 12px"
             >
-              <strong>⚠️ 注意:</strong> 已有出价，拍卖无法取消
+              <strong>注意:</strong> 已有出价，拍卖无法取消
             </div>
           </div>
           <div class="marketplace-actions">
@@ -73,7 +73,7 @@
       </div>
     </div>
     <div v-else-if="!loading" class="status">暂无活跃拍卖</div>
-    <div v-else class="status loading">🔄 加载中...</div>
+    <div v-else class="status loading">加载中...</div>
   </div>
 </template>
 
@@ -112,14 +112,14 @@ export default {
     // 上架拍卖功能
     async listNFTForAuction() {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        this.auctionMessage = '❌ 请先连接钱包并设置市场合约'
+        this.auctionMessage = '请先连接钱包并设置市场合约'
         this.auctionStatusType = 'error'
         return
       }
 
       this.auctionInProgress = true
       try {
-        this.auctionMessage = '🔄 上架拍卖中...'
+        this.auctionMessage = '上架拍卖中...'
         this.auctionStatusType = 'loading'
 
         // 将小时转换为秒
@@ -132,7 +132,7 @@ export default {
             from: web3Service.getAccount(),
           })
 
-        this.auctionMessage = `✅ NFT拍卖上架成功！<br>交易哈希: ${result.transactionHash}<br>拍卖时长: ${this.duration}小时`
+        this.auctionMessage = `NFT拍卖上架成功！<br>交易哈希: ${result.transactionHash}<br>拍卖时长: ${this.duration}小时`
         this.auctionStatusType = 'success'
         this.$emit('debug-info', `NFT #${this.auctionTokenId} 拍卖上架交易: ${result.transactionHash}`)
 
@@ -148,7 +148,7 @@ export default {
         }, 2000)
 
       } catch (error) {
-        this.auctionMessage = '❌ 上架拍卖失败: ' + error.message
+        this.auctionMessage = ' 上架拍卖失败: ' + error.message
         this.auctionStatusType = 'error'
         this.$emit('debug-info', `上架拍卖错误: ${error.message}`)
       } finally {
