@@ -11,22 +11,22 @@ contract COMP5521NFT is ERC721 {
     address public owner;
     
     // Token ID计数器
-    Counters.Counter private _tokenIdCounter;
+    Counters.Counter private tokenIdCounter;
     
     // 存储每个tokenId对应的元数据URI
-    mapping(uint256 => string) private _tokenURIs;
+    mapping(uint256 => string) private tokenURIs;
     
     // 存储NFT的创建时间
-    mapping(uint256 => uint256) public creationTime;
+    mapping(uint256 => uint256) public createTime;
     
     // 存储NFT的创作者信息
     mapping(uint256 => address) public creators;
     
-    // 🎯 免授权合约白名单
+    // 免授权合约白名单
     mapping(address => bool) public approvedContracts;
     
     // 事件：当新的NFT被铸造时触发
-    event NFTMinted(
+    event NFTminted(
         uint256 indexed tokenId,
         address indexed owner,
         string metadataURI,
@@ -41,14 +41,14 @@ contract COMP5521NFT is ERC721 {
     constructor() ERC721("COMP5521 Digital Collectible", "C5DC") {
         owner = msg.sender;
         
-        // 🎯 自动将部署者加入白名单（可选）
+        // 自动将部署者加入白名单（可选）
         approvedContracts[msg.sender] = true;
     }
 
     function safeMint(address to) external onlyOwner returns (uint256) {
         // 获取当前tokenId并递增计数器
-        uint256 tokenId = _tokenIdCounter.current() + 1;
-        _tokenIdCounter.increment();
+        uint256 tokenId = tokenIdCounter.current() + 1;
+        tokenIdCounter.increment();
         
         // 安全铸造NFT给目标地址
         _safeMint(to, tokenId);
@@ -61,14 +61,14 @@ contract COMP5521NFT is ERC721 {
         ));
         
         // 设置token的元数据URI
-        _setTokenURI(tokenId, metadataURI);
+        setTokenURI(tokenId, metadataURI);
         
         // 记录创建时间和创作者
-        creationTime[tokenId] = block.timestamp;
+        createTime[tokenId] = block.timestamp;
         creators[tokenId] = to;
         
         // 触发事件
-        emit NFTMinted(tokenId, to, metadataURI, block.timestamp);
+        emit NFTminted(tokenId, to, metadataURI, block.timestamp);
         
         return tokenId;
     }
@@ -90,15 +90,27 @@ contract COMP5521NFT is ERC721 {
         _transfer(from, to, tokenId);
     }
 
-    function _setTokenURI(uint256 tokenId, string memory metadataURI) internal virtual {
-        require(_exists(tokenId), "COMP5521NFT: URI set for nonexistent token");
-        _tokenURIs[tokenId] = metadataURI;
+    function totalSupply() public view returns (uint256) {
+        return tokenIdCounter.current();
+    }
+
+    function getNextTokenId() public view returns (uint256) {
+        return tokenIdCounter.current();
     }
     
-    function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
-        require(_exists(tokenId), "COMP5521NFT: URI query for nonexistent token");
-        return _tokenURIs[tokenId];
+    function exists(uint256 tokenId) internal view virtual returns (bool) {
+        return _ownerOf(tokenId) != address(0);
     }
+
+    function setTokenURI(uint256 tokenId, string memory metadataURI) internal virtual {
+        require(exists(tokenId), "COMP5521NFT: URI set for nonexistent token");
+        tokenURIs[tokenId] = metadataURI;
+    }
+    
+    // function tokenURI(uint256 tokenId) public view virtual override returns (string memory) {
+    //     require(exists(tokenId), "COMP5521NFT: URI query for nonexistent token");
+    //     return tokenURIs[tokenId];
+    // }
     
     function getNFTInfo(uint256 tokenId) public view returns (
         address tokenOwner,
@@ -107,31 +119,19 @@ contract COMP5521NFT is ERC721 {
         uint256 createdTime,
         uint256 totalMinted
     ) {
-        require(_exists(tokenId), "COMP5521NFT: Query for nonexistent token");
+        require(exists(tokenId), "COMP5521NFT: Query for nonexistent token");
         return (
             ownerOf(tokenId),
             tokenURI(tokenId),
             creators[tokenId],
-            creationTime[tokenId],
-            _tokenIdCounter.current()
+            createTime[tokenId],
+            tokenIdCounter.current()
         );
     }
     
-    function totalSupply() public view returns (uint256) {
-        return _tokenIdCounter.current();
-    }
-
-    function getNextTokenId() public view returns (uint256) {
-        return _tokenIdCounter.current();
-    }
-    
-    function _exists(uint256 tokenId) internal view virtual returns (bool) {
-        return _ownerOf(tokenId) != address(0);
-    }
-    
     function updateTokenURI(uint256 tokenId, string memory newMetadataURI) external onlyOwner {
-        require(_exists(tokenId), "COMP5521NFT: URI update for nonexistent token");
-        _tokenURIs[tokenId] = newMetadataURI;
+        require(exists(tokenId), "COMP5521NFT: URI update for nonexistent token");
+        tokenURIs[tokenId] = newMetadataURI;
     }
     
     function transferOwnership(address newOwner) external onlyOwner {

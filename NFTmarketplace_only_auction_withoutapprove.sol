@@ -73,7 +73,7 @@ contract NFTMarketplace is ReentrancyGuard {
         address indexed buyer,
         address seller,
         uint256 price,
-        uint256 feeAmount
+        uint256 transferFeeAmount
     );
     
     event Cancelled(
@@ -103,22 +103,23 @@ contract NFTMarketplace is ReentrancyGuard {
         uint256 amount,
         address previousBidder,
         uint256 refundAmount,
-        uint256 gasFeeDeducted
+        uint256 gasFee
     );
     
     event AuctionFinalized(
         uint256 indexed tokenId,
         address indexed winner,
         uint256 finalPrice,
-        uint256 feeAmount
+        uint256 transferFeeAmount
     );
 
-    constructor(address _stablecoin, address _nftContract) {
-        require(_stablecoin != address(0), "Invalid stablecoin address");
-        require(_nftContract != address(0), "Invalid NFT contract address");
+    // feeRecipient应该是msg。sender还是address（this）？
+    constructor(address inSablecoin, address inNftContract) {
+        require(inSablecoin != address(0), "Invalid stablecoin address");
+        require(inNftContract != address(0), "Invalid NFT contract address");
         
-        stablecoin = _stablecoin;
-        NFTContract = _nftContract;
+        stablecoin = inSablecoin;
+        NFTContract = inNftContract;
         feeRecipient = msg.sender;
     }
     
@@ -196,28 +197,30 @@ contract NFTMarketplace is ReentrancyGuard {
         emit AuctionStarted(tokenId, msg.sender, startPrice, startTime, endTime, fixedBidIncrement);
     }
     
+    
     function buyNFT(uint256 tokenId) external nonReentrant {
         Listing storage listing = listings[tokenId];
-        require(listing.active, "NFT not for sale");
+        require(listing.active, "NFT is not for sale");
         require(!listing.isAuction, "NFT is in auction mode");
         require(listing.seller != msg.sender, "Cannot buy your own NFT");
         
         ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
         ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
         
-        // 计算费用和卖家所得
-        uint256 feeAmount = (listing.price * feePercentage) / 10000;
-        uint256 sellerAmount = listing.price - feeAmount;
+        // 计算交易费用和卖家所得
+        uint256 transferFeeAmount = (listing.price * feePercentage) / 10000;
+        uint256 sellerAmount = listing.price - transferFeeAmount;
         
         // 检查买家有足够的代币
-        require(token.balanceOf(msg.sender) >= listing.price, "Insufficient balance");
+        require(token.balanceOf(msg.sender) >= listing.price, "Buyer's balance is insufficient");
         
         // 使用免授权转账（不再需要检查 allowance）
         token.transferFromAutomated(msg.sender, listing.seller, sellerAmount);
         
         // 转移费用到收费地址
-        if (feeAmount > 0) {
-            token.transferFromAutomated(msg.sender, feeRecipient, feeAmount);
+        // 收费地址是msg。sender？
+        if (transferFeeAmount > 0) {
+            token.transferFromAutomated(msg.sender, feeRecipient, transferFeeAmount);
         }
         
         // 使用免授权转移NFT给买家
@@ -225,138 +228,10 @@ contract NFTMarketplace is ReentrancyGuard {
         
         // 删除上架信息
         listing.active = false;
+        listing.isAuction = false;
         listing.finalized = true;
         
-        emit Sold(tokenId, msg.sender, listing.seller, listing.price, feeAmount);
-    }
-    
-    function placeBid(uint256 tokenId) external nonReentrant {
-        Listing storage listing = listings[tokenId];
-        
-        // 自动检查并结束过期的拍卖
-        if (listing.active && listing.isAuction && block.timestamp > listing.endTime && !listing.finalized) {
-            _finalizeAuction(tokenId);
-            return;
-        }
-        
-        require(listing.active, "NFT not for sale");
-        require(listing.isAuction, "NFT not in auction mode");
-        require(block.timestamp >= listing.startTime, "Auction not started");
-        require(block.timestamp <= listing.endTime, "Auction ended");
-        require(!listing.finalized, "Auction already finalized");
-        require(msg.sender != listing.seller, "Seller cannot bid");
-        
-        ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
-        
-        // 计算本次出价金额
-        uint256 bidAmount;
-        if (listing.highestBidder == address(0)) {
-            bidAmount = listing.price;
-        } else {
-            bidAmount = listing.highestBid + listing.fixedBidIncrement;
-        }
-        
-        // 检查买家有足够的代币
-        require(token.balanceOf(msg.sender) >= bidAmount, "Insufficient balance");
-        
-        // 使用免授权锁定资金（不再需要检查 allowance）
-        token.transferFromAutomated(msg.sender, address(this), bidAmount);
-        
-        uint256 gasFeeDeducted = 0;
-        address previousBidder = listing.highestBidder;
-        uint256 refundAmount = listing.highestBid;
-        
-        // 退还前一个最高出价者的资金（扣除Gas费用）
-        if (previousBidder != address(0) && refundAmount > 0) {
-            gasFeeDeducted = (refundAmount * gasFeePercentage) / 10000;
-            uint256 actualRefund = refundAmount - gasFeeDeducted;
-            
-            if (actualRefund > 0) {
-                require(token.transfer(previousBidder, actualRefund), "Refund transfer failed");
-            }
-            
-            if (gasFeeDeducted > 0) {
-                require(token.transfer(feeRecipient, gasFeeDeducted), "Gas fee transfer failed");
-            }
-        }
-        
-        // 更新最高出价信息
-        listing.highestBidder = msg.sender;
-        listing.highestBid = bidAmount;
-        listing.price = bidAmount;
-        
-        emit BidPlaced(tokenId, msg.sender, bidAmount, previousBidder, refundAmount - gasFeeDeducted, gasFeeDeducted);
-    }
-    
-    function _finalizeAuction(uint256 tokenId) internal {
-        Listing storage listing = listings[tokenId];
-        require(!listing.finalized, "Auction already finalized");
-        
-        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
-        ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
-
-        if (listing.highestBidder == address(0)) {
-            // 使用免授权返还NFT给卖家
-            nft.transferFromAutomated(address(this), listing.seller, tokenId);
-            emit AuctionFinalized(tokenId, address(0), 0, 0);
-        } else {
-            // 有获胜者，完成交易
-            // 计算费用和卖家所得
-            uint256 feeAmount = (listing.highestBid * feePercentage) / 10000;
-            uint256 sellerAmount = listing.highestBid - feeAmount;
-            
-            // 转移资金给卖家
-            require(token.transfer(listing.seller, sellerAmount), "Transfer to seller failed");
-            
-            // 转移费用给收费地址
-            if (feeAmount > 0) {
-                require(token.transfer(feeRecipient, feeAmount), "Fee transfer failed");
-            }
-            
-            // 使用免授权转移NFT给获胜者
-            nft.transferFromAutomated(address(this), listing.highestBidder, tokenId);
-            
-            emit AuctionFinalized(tokenId, listing.highestBidder, listing.highestBid, feeAmount);
-        }
-        
-        // 关闭上架并标记为已结束
-        listing.active = false;
-        listing.finalized = true;
-    }
-
-    //没办法自动结束拍卖，我就写了个批量结束，买方拍卖结束就点一下，时间到的所有拍卖就都结束了
-    function finalize_Expired_Auctions() external nonReentrant {
-    for (uint i = 0; i < listedTokenIds.length; i++) {
-        uint256 tokenId = listedTokenIds[i];
-        Listing storage listing = listings[tokenId];
-        
-        if (listing.active && listing.isAuction && 
-            block.timestamp > listing.endTime && !listing.finalized) {
-            _finalizeAuction(tokenId);
-        }
-    }
-}
-
-    
-    /**
-     * @dev 取消上架（仅限固定价格模式）- 使用免授权
-     * @param tokenId NFT token ID
-     */
-    function cancelListing(uint256 tokenId) external nonReentrant {
-        Listing storage listing = listings[tokenId];
-        require(listing.active, "NFT not for sale");
-        require(listing.seller == msg.sender, "Not seller");
-        require(!listing.isAuction, "Cannot cancel auction listing");
-        
-        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
-        
-        // 使用免授权返还NFT给卖家
-        nft.transferFromAutomated(address(this), msg.sender, tokenId);
-        
-        listing.active = false;
-        listing.finalized = true;
-        
-        emit Cancelled(tokenId, msg.sender);
+        emit Sold(tokenId, msg.sender, listing.seller, listing.price, transferFeeAmount);
     }
     
     /**
@@ -406,6 +281,137 @@ contract NFTMarketplace is ReentrancyGuard {
         );
     }
     
+    function placeBid(uint256 tokenId) external nonReentrant {
+        Listing storage listing = listings[tokenId];
+        
+        // 自动检查并结束过期的拍卖
+        if (listing.active && listing.isAuction && block.timestamp > listing.endTime && !listing.finalized) {
+            finalizeAuction(tokenId);
+            return;
+        }
+        
+        require(listing.active, "NFT is not for sale");
+        require(listing.isAuction, "NFT is not in auction mode");
+        require(block.timestamp >= listing.startTime, "Auction is not started");
+        require(block.timestamp <= listing.endTime, "Auction was ended");
+        require(!listing.finalized, "Auction has already finalized");
+        require(msg.sender != listing.seller, "Seller cannot bid");
+        
+        ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
+        
+        // 计算本次出价金额
+        uint256 bidAmount;
+        if (listing.highestBidder == address(0)) {
+            bidAmount = listing.price;
+        } else {
+            bidAmount = listing.highestBid + listing.fixedBidIncrement;
+        }
+        
+        // 检查买家有足够的代币
+        require(token.balanceOf(msg.sender) >= bidAmount, "Buyer's balance is insufficient");
+        
+        // 使用免授权锁定资金（不再需要检查 allowance）
+        token.transferFromAutomated(msg.sender, address(this), bidAmount);
+        
+        uint256 gasFee = 0;
+        address previousBidder = listing.highestBidder;
+        uint256 refundAmount = listing.highestBid;
+        
+        // 退还前一个最高出价者的资金（扣除Gas费用）
+        if (previousBidder != address(0) && refundAmount > 0) {
+            gasFee = (refundAmount * gasFeePercentage) / 10000;
+            uint256 actualRefund = refundAmount - gasFee;
+            
+            if (actualRefund > 0) {
+                require(token.transfer(previousBidder, actualRefund), "Refund transfer failed");
+            }
+            
+            if (gasFee > 0) {
+                require(token.transfer(feeRecipient, gasFee), "Gas fee transfer failed");
+            }
+        }
+        
+        // 更新最高出价信息
+        listing.highestBidder = msg.sender;
+        listing.highestBid = bidAmount;
+        listing.price = bidAmount;
+        
+        emit BidPlaced(tokenId, msg.sender, bidAmount, previousBidder, refundAmount - gasFee, gasFee);
+    }
+    
+    function finalizeAuction(uint256 tokenId) internal {
+        Listing storage listing = listings[tokenId];
+        require(!listing.finalized, "Auction has already finalized");
+        
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
+        ICOMP5521Dollar token = ICOMP5521Dollar(stablecoin);
+
+        if (listing.highestBidder == address(0)) {
+            // 使用免授权返还NFT给卖家
+            nft.transferFromAutomated(address(this), listing.seller, tokenId);
+            emit AuctionFinalized(tokenId, address(0), 0, 0);
+        } else {
+            // 有获胜者，完成交易
+            // 计算费用和卖家所得
+            uint256 transferFeeAmount = (listing.highestBid * feePercentage) / 10000;
+            uint256 sellerAmount = listing.highestBid - transferFeeAmount;
+            
+            // 转移资金给卖家
+            require(token.transfer(listing.seller, sellerAmount), "Transfer to seller failed");
+            
+            // 转移费用给收费地址
+            if (transferFeeAmount > 0) {
+                require(token.transfer(feeRecipient, transferFeeAmount), "Fee transfer failed");
+            }
+            
+            // 使用免授权转移NFT给获胜者
+            nft.transferFromAutomated(address(this), listing.highestBidder, tokenId);
+            
+            emit AuctionFinalized(tokenId, listing.highestBidder, listing.highestBid, transferFeeAmount);
+        }
+        
+        // 关闭上架并标记为已结束
+        listing.active = false;
+        listing.isAuction = false;
+        listing.finalized = true;
+    }
+
+    //没办法自动结束拍卖，我就写了个批量结束，买方拍卖结束就点一下，时间到的所有拍卖就都结束了
+    function finalizeExpiredAuctions() external nonReentrant {
+    for (uint i = 0; i < listedTokenIds.length; i++) {
+        uint256 tokenId = listedTokenIds[i];
+        Listing storage listing = listings[tokenId];
+        
+        if (listing.active && listing.isAuction && 
+            block.timestamp > listing.endTime && !listing.finalized) {
+            finalizeAuction(tokenId);
+        }
+    }
+}
+    
+    /**
+     * @dev 取消上架（仅限固定价格模式）- 使用免授权
+     * @param tokenId NFT token ID
+     */
+    function cancelListing(uint256 tokenId) external nonReentrant {
+        Listing storage listing = listings[tokenId];
+        require(listing.active, "NFT is not for sale");
+        require(listing.seller == msg.sender, "Not seller");
+        require(!listing.isAuction, "Cannot cancel auction listing");
+        
+        ICOMP5521NFT nft = ICOMP5521NFT(NFTContract);
+        
+        // 使用免授权返还NFT给卖家
+        nft.transferFromAutomated(address(this), msg.sender, tokenId);
+        
+        listing.active = false;
+        listing.isAuction = false;
+        listing.finalized = true;
+        
+        emit Cancelled(tokenId, msg.sender);
+    }
+    
+       
     function getAllActiveAuctions() external view returns (
         uint256[] memory tokenIds,
         address[] memory sellers,
