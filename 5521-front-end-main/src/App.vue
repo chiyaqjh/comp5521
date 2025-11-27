@@ -2,8 +2,8 @@
   <div class="container">
     <!-- 页面头部 -->
     <header>
-      <h1>COMP5521 NFT 交易平台</h1>
-      <p>稳定币、NFT和市场合约交互测试平台</p>
+      <h1>COMP5521 NFT Marketplace</h1>
+      <p>Stablecoin, NFT and Marketplace Contract Interaction Testing Platform</p>
     </header>
 
     <!-- 钱包连接区域 -->
@@ -105,22 +105,22 @@ export default {
   },
   methods: {
     onWalletConnected(data) {
-      this.addDebugInfo(`钱包已连接: ${data.account}, 链ID: ${data.chainId}`)
+      this.addDebugInfo(`Wallet connected: ${data.account}, Chain ID: ${data.chainId}`)
     },
     onWalletError(error) {
-      this.addDebugInfo(`钱包连接错误: ${error.message}`)
+      this.addDebugInfo(`Wallet connection error: ${error.message}`)
     },
     onStablecoinContractSet(contract) {
       this.stablecoinContract = contract
-      this.addDebugInfo('稳定币合约已设置')
+      this.addDebugInfo('Stablecoin contract set')
     },
     onNFTContractSet(contract) {
       this.nftContract = contract
-      this.addDebugInfo('NFT合约已设置')
+      this.addDebugInfo('NFT contract set')
     },
     onMarketplaceContractSet(contract) {
       this.marketplaceContract = contract
-      this.addDebugInfo('市场合约已设置')
+      this.addDebugInfo('Marketplace contract set')
     },
     addDebugInfo(message) {
       if (this.$refs.debugComponent) {
@@ -129,7 +129,7 @@ export default {
     },
   },
   mounted() {
-    this.addDebugInfo('应用已加载')
+    this.addDebugInfo('Application loaded')
   },
 }
 </script>

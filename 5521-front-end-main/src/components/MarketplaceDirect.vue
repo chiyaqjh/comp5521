@@ -1,25 +1,25 @@
 <template>
   <div class="card">
-    <h2> 市场直接购买</h2>
+    <h2> Marketplace Direct Purchase</h2>
     
-    <!-- 上架功能 -->
+    <!-- Listing Functionality -->
     <div class="listing-section">
-      <h3>上架我的NFT</h3>
+      <h3>List My NFT</h3>
       <div class="form-group">
         <label>Token ID:</label>
         <input type="number" v-model="listTokenId" />
       </div>
       <div class="form-group">
-        <label>价格 (C5D):</label>
+        <label>Price (C5D):</label>
         <input type="number" v-model="listPrice" />
       </div>
       <button class="btn-success" @click="listNFT" :disabled="listingInProgress">
-        {{ listingInProgress ? '上架中...' : '上架NFT' }}
+        {{ listingInProgress ? 'Listing...' : 'List NFT' }}
       </button>
       <div :class="['status', listStatusType]" v-if="listMessage" v-html="listMessage"></div>
     </div>
 
-    <button @click="loadFixedPriceListings">加载固定价格商品</button>
+    <button @click="loadFixedPriceListings">Load Fixed Price Listings</button>
     
     <div class="nft-grid" v-if="listings.length > 0">
       <div v-for="listing in listings" :key="listing.tokenId" class="nft-card">
@@ -28,26 +28,26 @@
           <div class="nft-title">{{ listing.name }}</div>
           <div class="nft-id">Token ID: {{ listing.tokenId }}</div>
           <div class="nft-owner">
-            卖家: {{ listing.seller.substring(0, 8) }}...{{
+            Seller: {{ listing.seller.substring(0, 8) }}...{{
               listing.seller.substring(listing.seller.length - 6)
             }}
           </div>
-          <div class="nft-price">价格: {{ listing.price }} C5D</div>
+          <div class="nft-price">Price: {{ listing.price }} C5D</div>
           <div class="marketplace-actions">
-            <button class="btn-success" @click="buyNFT(listing.tokenId)">购买</button>
+            <button class="btn-success" @click="buyNFT(listing.tokenId)">Buy</button>
             <button
               v-if="listing.seller.toLowerCase() === currentAccount.toLowerCase()"
               class="btn-danger"
               @click="cancelListing(listing.tokenId)"
             >
-              取消上架
+              Cancel Listing
             </button>
           </div>
         </div>
       </div>
     </div>
-    <div v-else-if="!loading" class="status">暂无固定价格商品</div>
-    <div v-else class="status loading">加载中...</div>
+    <div v-else-if="!loading" class="status">No fixed price listings available</div>
+    <div v-else class="status loading">Loading...</div>
   </div>
 </template>
 
@@ -83,14 +83,14 @@ export default {
     // 上架NFT功能
     async listNFT() {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        this.listMessage = ' 请先连接钱包并设置市场合约'
+        this.listMessage = ' Please connect your wallet and set the marketplace contract first'
         this.listStatusType = 'error'
         return
       }
 
       this.listingInProgress = true
       try {
-        this.listMessage = '加载中...'
+        this.listMessage = 'Listing...'
         this.listStatusType = 'loading'
 
         // 直接上架NFT，不进行任何检查
@@ -100,11 +100,11 @@ export default {
             from: web3Service.getAccount(),
           })
 
-        this.listMessage = `NFT上架成功！<br>交易哈希: ${result.transactionHash}`
+        this.listMessage = `NFT listed successfully!<br>Transaction Hash: ${result.transactionHash}`
         this.listStatusType = 'success'
-        this.$emit('debug-info', `NFT #${this.listTokenId} 上架交易: ${result.transactionHash}`)
+        this.$emit('debug-info', `NFT #${this.listTokenId} listing transaction: ${result.transactionHash}`)
 
-        // 清空表单
+        // Clear form
         this.listTokenId = ''
         this.listPrice = ''
 
@@ -114,9 +114,9 @@ export default {
         }, 2000)
 
       } catch (error) {
-        this.listMessage = '上架失败: ' + error.message
+        this.listMessage = 'Listing failed: ' + error.message
         this.listStatusType = 'error'
-        this.$emit('debug-info', `上架NFT错误: ${error.message}`)
+        this.$emit('debug-info', `Listing NFT error: ${error.message}`)
       } finally {
         this.listingInProgress = false
       }
@@ -124,7 +124,7 @@ export default {
 
     async loadFixedPriceListings() {
       if (!this.marketplaceContract) {
-        alert('请先设置市场合约地址')
+        alert('Please set the marketplace contract address first')
         return
       }
 
@@ -158,7 +158,7 @@ export default {
               nftName = metadata.name || nftName
             }
           } catch (e) {
-            this.$emit('debug-info', `获取NFT #${tokenId} 元数据失败: ${e.message}`)
+            this.$emit('debug-info', `Failed to fetch metadata for NFT #${tokenId}: ${e.message}`)
           }
 
           this.listings.push({
@@ -170,10 +170,10 @@ export default {
           })
         }
 
-        this.$emit('debug-info', `加载了 ${this.listings.length} 个固定价格商品`)
+        this.$emit('debug-info', `Loaded ${this.listings.length} fixed price listings`)
       } catch (error) {
-        alert('加载固定价格商品失败: ' + error.message)
-        this.$emit('debug-info', `加载固定价格商品错误: ${error.message}`)
+        alert('Failed to load fixed price listings: ' + error.message)
+        this.$emit('debug-info', `Failed to load fixed price listings: ${error.message}`)
       } finally {
         this.loading = false
       }
@@ -181,7 +181,7 @@ export default {
 
     async buyNFT(tokenId) {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        alert('请先连接钱包并设置市场合约')
+        alert('Please connect your wallet and set the marketplace contract first')
         return
       }
 
@@ -190,19 +190,19 @@ export default {
           from: web3Service.getAccount(),
         })
 
-        alert(`购买成功！交易哈希: ${result.transactionHash}`)
-        this.$emit('debug-info', `购买NFT #${tokenId} 交易: ${result.transactionHash}`)
+        alert(`Purchase successful! Transaction Hash: ${result.transactionHash}`)
+        this.$emit('debug-info', `Purchase NFT #${tokenId} transaction: ${result.transactionHash}`)
 
         this.loadFixedPriceListings()
       } catch (error) {
-        alert(`购买失败: ${error.message}`)
-        this.$emit('debug-info', `购买NFT #${tokenId} 错误: ${error.message}`)
+        alert(`Purchase failed: ${error.message}`)
+        this.$emit('debug-info', `Purchase NFT #${tokenId} error: ${error.message}`)
       }
     },
 
     async cancelListing(tokenId) {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        alert('请先连接钱包并设置市场合约')
+        alert('Please connect your wallet and set the marketplace contract first')
         return
       }
 
@@ -211,13 +211,13 @@ export default {
           from: web3Service.getAccount(),
         })
 
-        alert(`取消上架成功！交易哈希: ${result.transactionHash}`)
-        this.$emit('debug-info', `取消NFT #${tokenId} 上架交易: ${result.transactionHash}`)
+        alert(`Cancel listing successful! Transaction Hash: ${result.transactionHash}`)
+        this.$emit('debug-info', `Cancel NFT #${tokenId} listing transaction: ${result.transactionHash}`)
 
         this.loadFixedPriceListings()
       } catch (error) {
-        alert(`取消上架失败: ${error.message}`)
-        this.$emit('debug-info', `取消NFT #${tokenId} 上架错误: ${error.message}`)
+        alert(`Cancel listing failed: ${error.message}`)
+        this.$emit('debug-info', `Cancel NFT #${tokenId} listing error: ${error.message}`)
       }
     },
   },

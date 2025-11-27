@@ -1,9 +1,9 @@
 <template>
   <div class="card">
-    <h2>调试信息</h2>
+    <h2>DebugInfo</h2>
     <div class="marketplace-actions">
-      <button @click="clearDebug">清空调试信息</button>
-      <button @click="exportDebugInfo">导出调试信息</button>
+      <button @click="clearDebug">Clear Debug Info</button>
+      <button @click="exportDebugInfo">Export Debug Info</button>
     </div>
     <div ref="debugInfo" class="debug-info"></div>
   </div>

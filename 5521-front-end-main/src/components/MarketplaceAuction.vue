@@ -1,39 +1,39 @@
 <template>
   <div class="card">
-    <h2>⚡ 市场拍卖</h2>
+    <h2> Marketplace Auction</h2>
     
     <!-- 上架拍卖功能 -->
     <div class="listing-section">
-      <h3>上架拍卖我的NFT</h3>
+      <h3>List My NFT for Auction</h3>
       <div class="form-row">
         <div class="form-group">
           <label>Token ID:</label>
           <input type="number" v-model="auctionTokenId" />
         </div>
         <div class="form-group">
-          <label>起拍价 (C5D):</label>
+          <label>Starting Price (C5D):</label>
           <input type="number" v-model="startPrice" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label>拍卖时长 (小时):</label>
+          <label>Auction Duration (hours):</label>
           <input type="number" v-model="duration" />
         </div>
         <div class="form-group">
-          <label>固定加价 (C5D):</label>
+          <label>Fixed Bid Increment (C5D):</label>
           <input type="number" v-model="bidIncrement" />
         </div>
       </div>
       <button class="btn-warning" @click="listNFTForAuction" :disabled="auctionInProgress">
-        {{ auctionInProgress ? '上架中...' : '上架拍卖' }}
+        {{ auctionInProgress ? 'Listing...' : 'List for Auction' }}
       </button>
       <div :class="['status', auctionStatusType]" v-if="auctionMessage" v-html="auctionMessage"></div>
     </div>
 
     <div class="marketplace-actions">
-      <button @click="loadActiveAuctions">加载活跃拍卖</button>
-      <button @click="finalizeExpiredAuctions">结束过期拍卖</button>
+      <button @click="loadActiveAuctions">Load Active Auctions</button>
+      <button @click="finalizeExpiredAuctions">Finalize Expired Auctions</button>
     </div>
     
     <div class="nft-grid" v-if="auctions.length > 0">
@@ -43,37 +43,37 @@
           <div class="nft-title">{{ auction.name }}</div>
           <div class="nft-id">Token ID: {{ auction.tokenId }}</div>
           <div class="nft-owner">
-            卖家: {{ auction.seller.substring(0, 8) }}...{{
+            Seller: {{ auction.seller.substring(0, 8) }}...{{
               auction.seller.substring(auction.seller.length - 6)
             }}
           </div>
           <div class="auction-info">
-            <div><strong>当前最高出价:</strong> {{ auction.currentBid }} C5D</div>
-            <div><strong>下一次出价:</strong> {{ auction.nextBidAmount }} C5D</div>
-            <div><strong>剩余时间:</strong> {{ auction.timeRemaining }}</div>
-            <div><strong>固定加价:</strong> {{ auction.fixedBidIncrement }} C5D</div>
+            <div><strong>Current Highest Bid:</strong> {{ auction.currentBid }} C5D</div>
+            <div><strong>Next Bid Amount:</strong> {{ auction.nextBidAmount }} C5D</div>
+            <div><strong>Time Remaining:</strong> {{ auction.timeRemaining }}</div>
+            <div><strong>Fixed Bid Increment:</strong> {{ auction.fixedBidIncrement }} C5D</div>
             <div v-if="auction.hasBids">
-              <strong>最高出价者:</strong> {{ auction.highestBidder.substring(0, 8) }}...{{
+              <strong>Highest Bidder:</strong> {{ auction.highestBidder.substring(0, 8) }}...{{
                 auction.highestBidder.substring(auction.highestBidder.length - 6)
               }}
             </div>
-            <div v-else><strong>状态:</strong> 暂无出价</div>
+            <div v-else><strong>Status:</strong> No bids yet</div>
             <div
               v-if="auction.hasBids"
               class="status error"
               style="margin-top: 10px; padding: 8px; font-size: 12px"
             >
-              <strong>注意:</strong> 已有出价，拍卖无法取消
+              <strong>Note:</strong> Auction cannot be canceled once bids have been placed
             </div>
           </div>
           <div class="marketplace-actions">
-            <button class="btn-warning" @click="placeBid(auction.tokenId)">出价</button>
+            <button class="btn-warning" @click="placeBid(auction.tokenId)">Place Bid</button>
           </div>
         </div>
       </div>
     </div>
-    <div v-else-if="!loading" class="status">暂无活跃拍卖</div>
-    <div v-else class="status loading">加载中...</div>
+    <div v-else-if="!loading" class="status">No active auctions</div>
+    <div v-else class="status loading">Loading...</div>
   </div>
 </template>
 
@@ -112,14 +112,14 @@ export default {
     // 上架拍卖功能
     async listNFTForAuction() {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        this.auctionMessage = '请先连接钱包并设置市场合约'
+        this.auctionMessage = 'Please connect your wallet and set the marketplace contract first'
         this.auctionStatusType = 'error'
         return
       }
 
       this.auctionInProgress = true
       try {
-        this.auctionMessage = '上架拍卖中...'
+        this.auctionMessage = 'Listing auction...'
         this.auctionStatusType = 'loading'
 
         // 将小时转换为秒
@@ -132,9 +132,9 @@ export default {
             from: web3Service.getAccount(),
           })
 
-        this.auctionMessage = `NFT拍卖上架成功！<br>交易哈希: ${result.transactionHash}<br>拍卖时长: ${this.duration}小时`
+        this.auctionMessage = `NFT auction listed successfully!<br>Transaction Hash: ${result.transactionHash}<br>Auction Duration: ${this.duration} hours`
         this.auctionStatusType = 'success'
-        this.$emit('debug-info', `NFT #${this.auctionTokenId} 拍卖上架交易: ${result.transactionHash}`)
+        this.$emit('debug-info', `NFT #${this.auctionTokenId} auction listing transaction: ${result.transactionHash}`)
 
         // 清空表单
         this.auctionTokenId = ''
@@ -148,9 +148,9 @@ export default {
         }, 2000)
 
       } catch (error) {
-        this.auctionMessage = ' 上架拍卖失败: ' + error.message
+        this.auctionMessage = ' Listing auction failed: ' + error.message
         this.auctionStatusType = 'error'
-        this.$emit('debug-info', `上架拍卖错误: ${error.message}`)
+        this.$emit('debug-info', `Listing auction error: ${error.message}`)
       } finally {
         this.auctionInProgress = false
       }
@@ -158,7 +158,7 @@ export default {
 
     async loadActiveAuctions() {
       if (!this.marketplaceContract) {
-        alert('请先设置市场合约地址')
+        alert('Please set the marketplace contract address first')
         return
       }
 
@@ -194,7 +194,7 @@ export default {
               nftName = metadata.name || nftName
             }
           } catch (e) {
-            this.$emit('debug-info', `获取NFT #${tokenId} 元数据失败: ${e.message}`)
+            this.$emit('debug-info', `Failed to fetch metadata for NFT #${tokenId}: ${e.message}`)
           }
 
           let auctionStatus
@@ -236,10 +236,10 @@ export default {
           })
         }
 
-        this.$emit('debug-info', `加载了 ${this.auctions.length} 个活跃拍卖`)
+        this.$emit('debug-info', `Loaded ${this.auctions.length} active auctions`)
       } catch (error) {
-        alert('加载活跃拍卖失败: ' + error.message)
-        this.$emit('debug-info', `加载活跃拍卖错误: ${error.message}`)
+        alert('Failed to load active auctions: ' + error.message)
+        this.$emit('debug-info', `Error loading active auctions: ${error.message}`)
       } finally {
         this.loading = false
       }
@@ -247,7 +247,7 @@ export default {
 
     async placeBid(tokenId) {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        alert('请先连接钱包并设置市场合约')
+        alert('Please connect your wallet and set the marketplace contract first')
         return
       }
 
@@ -256,19 +256,19 @@ export default {
           from: web3Service.getAccount(),
         })
 
-        alert(`出价成功！交易哈希: ${result.transactionHash}`)
-        this.$emit('debug-info', `对NFT #${tokenId} 出价交易: ${result.transactionHash}`)
+        alert(`Bid placed successfully! Transaction Hash: ${result.transactionHash}`)
+        this.$emit('debug-info', `Bid transaction for NFT #${tokenId}: ${result.transactionHash}`)
 
         this.loadActiveAuctions()
       } catch (error) {
-        alert(`出价失败: ${error.message}`)
-        this.$emit('debug-info', `对NFT #${tokenId} 出价错误: ${error.message}`)
+        alert(`Bid failed: ${error.message}`)
+        this.$emit('debug-info', `Bid error for NFT #${tokenId}: ${error.message}`)
       }
     },
 
     async finalizeExpiredAuctions() {
       if (!this.marketplaceContract || !web3Service.getAccount()) {
-        alert('请先连接钱包并设置市场合约')
+        alert('Please connect your wallet and set the marketplace contract first')
         return
       }
 
@@ -277,13 +277,13 @@ export default {
           from: web3Service.getAccount(),
         })
 
-        alert(`结束过期拍卖成功！交易哈希: ${result.transactionHash}`)
-        this.$emit('debug-info', `结束过期拍卖交易: ${result.transactionHash}`)
+        alert(`Expired auctions finalized successfully! Transaction Hash: ${result.transactionHash}`)
+        this.$emit('debug-info', `Expired auctions finalize transaction: ${result.transactionHash}`)
 
         this.loadActiveAuctions()
       } catch (error) {
-        alert(`结束过期拍卖失败: ${error.message}`)
-        this.$emit('debug-info', `结束过期拍卖错误: ${error.message}`)
+        alert(`Failed to finalize expired auctions: ${error.message}`)
+        this.$emit('debug-info', `Error finalizing expired auctions: ${error.message}`)
       }
     },
   },
