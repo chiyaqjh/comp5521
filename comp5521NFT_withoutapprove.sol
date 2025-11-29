@@ -34,7 +34,7 @@ contract COMP5521NFT is ERC721 {
     );
 
     modifier onlyOwner() {
-        require(msg.sender == owner, "COMP5521NFT: Caller is not the owner");
+        require(msg.sender == owner, "Caller is not the owner");
         _;
     }
     
@@ -45,9 +45,8 @@ contract COMP5521NFT is ERC721 {
         approvedContracts[msg.sender] = true;
     }
 
-    function safeMint(address to) external onlyOwner returns (uint256) {
+    function safeMint(address to, uint256 tokenId) external onlyOwner returns (uint256) {
         // 获取当前tokenId并递增计数器
-        uint256 tokenId = _tokenIdCounter.current() + 1;
         _tokenIdCounter.increment();
         
         // 安全铸造NFT给目标地址
@@ -81,7 +80,7 @@ contract COMP5521NFT is ERC721 {
         approvedContracts[contractAddress] = false;
     }
 
-    function transferFromAutomated(
+    function transferFromAuto(
         address from,
         address to,
         uint256 tokenId

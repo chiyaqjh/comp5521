@@ -82,7 +82,7 @@ export const NFT_ABI = [
   {
     inputs: [
       { internalType: 'address', name: 'to', type: 'address' },
-      { internalType: 'string', name: 'metadataURI', type: 'string' },
+      { internalType: 'uint256', name: 'tokenId', type: 'uint256' },
     ],
     name: 'safeMint',
     outputs: [],

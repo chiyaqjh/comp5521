@@ -4,7 +4,7 @@
     <div class="card">
       <h2>NFT Mint</h2>
       <div class="form-group">
-        <label>Metadata URI (GitHub RAW URL):</label>
+        <label>Metadata URI(eg):</label>
         <textarea v-model="tokenURI" rows="3"></textarea>
       </div>
       <button @click="mintNFT">Mint NFT</button>
@@ -59,44 +59,42 @@ export default {
     }
   },
   methods: {
-    async mintNFT() {
-      if (!this.nftContract || !web3Service.getAccount()) {
-        this.mintMessage = 'Please connect your wallet and set the NFT contract first'
-        this.mintStatusType = 'error'
-        return
-      }
+   async mintNFT() {
+  if (!this.nftContract || !web3Service.getAccount()) {
+    this.mintMessage = 'Please connect your wallet and set the NFT contract first'
+    this.mintStatusType = 'error'
+    return
+  }
 
-      if (!this.tokenURI) {
-        this.mintMessage = 'Please enter the metadata URI'
-        this.mintStatusType = 'error'
-        return
-      }
+  try {
+    this.mintMessage = 'Minting NFT...'
+    this.mintStatusType = 'loading'
+    this.$emit('debug-info', 'Starting to mint NFT')
 
-      try {
-        this.mintMessage = 'Minting NFT...'
-        this.mintStatusType = 'loading'
-        this.$emit('debug-info', `Starting to mint NFT, metadata URI: ${this.tokenURI}`)
+    // 首先获取下一个可用的Token ID
+    const nextTokenId = await this.nftContract.methods.getNextTokenId().call()
+    
+    // 正确的mint调用 - 传递两个参数：to地址和tokenId
+    const result = await this.nftContract.methods
+      .safeMint(web3Service.getAccount(), nextTokenId)
+      .send({
+        from: web3Service.getAccount(),
+      })
 
-        const result = await this.nftContract.methods
-          .safeMint(web3Service.getAccount(), this.tokenURI)
-          .send({
-            from: web3Service.getAccount(),
-          })
+    this.mintMessage = `NFT minted successfully!<br>Token ID: ${nextTokenId}<br>Transaction Hash: ${result.transactionHash}`
+    this.mintStatusType = 'success'
+    this.$emit('debug-info', `NFT mint transaction: ${result.transactionHash}, Token ID: ${nextTokenId}`)
 
-        this.mintMessage = `NFT minted successfully!<br>Transaction Hash: ${result.transactionHash}`
-        this.mintStatusType = 'success'
-        this.$emit('debug-info', `NFT mint transaction: ${result.transactionHash}`)
-
-        setTimeout(() => {
-          this.getNFTContractInfo()
-          this.loadMyNFTs()
-        }, 3000)
-      } catch (error) {
-        this.mintMessage = 'NFT minting failed: ' + error.message
-        this.mintStatusType = 'error'
-        this.$emit('debug-info', `NFT minting error: ${error.message}`)
-      }
-    },
+    setTimeout(() => {
+      this.getNFTContractInfo()
+      this.loadMyNFTs()
+    }, 3000)
+  } catch (error) {
+    this.mintMessage = 'NFT minting failed: ' + error.message
+    this.mintStatusType = 'error'
+    this.$emit('debug-info', `NFT minting error: ${error.message}`)
+  }
+},
 
     async getNFTContractInfo() {
       if (!this.nftContract) {

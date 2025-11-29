@@ -1,0 +1,443 @@
+/* Modern layout styles for the NFT platform - Simple & Clean */
+:root {
+  /* Light theme */
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #10b981;
+  --accent-2: #059669;
+  --border: #e5e7eb;
+  --text: #1f2937;
+}
+
+/* Dark theme */
+[data-theme='dark'] {
+  --bg: #111827;
+  --card: #1f2937;
+  --muted: #9ca3af;
+  --accent: #10b981;
+  --accent-2: #059669;
+  --border: #374151;
+  --text: #f3f4f6;
+}
+* {
+  box-sizing: border-box;
+}
+html,
+body,
+#app {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+.container {
+  display: flex;
+  min-height: 100vh;
+  gap: 20px;
+  padding: 20px;
+}
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: var(--card);
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.brand .logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: white;
+  font-size: 16px;
+}
+.brand h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+.sidebar .nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.nav .nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+.nav .nav-btn:hover {
+  background: var(--border);
+  color: var(--text);
+}
+.nav .nav-btn.active {
+  background: var(--accent);
+  color: white;
+}
+.sidebar .small {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.sidebar-controls {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.control-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+/* Main area */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px;
+  border-radius: 8px;
+  background: var(--card);
+  border: 1px solid var(--border);
+}
+.header .title {
+  display: flex;
+  flex-direction: column;
+}
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+.header p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.header .actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+.card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+.card:hover {
+  border-color: var(--accent);
+}
+.nft-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+/* Contract setup specific styling */
+.contract-setup {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.contract-setup .contract-item {
+  flex: 1 1 280px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 16px;
+  border-radius: 8px;
+}
+.contract-setup .contract-item h3 {
+  margin: 0 0 12px 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+}
+.contract-address {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border) !important;
+  background: var(--bg) !important;
+  color: var(--text);
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+.contract-setup button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.contract-setup button:hover {
+  opacity: 0.9;
+}
+.contract-setup .status {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* Language & Theme select */
+.language-switcher .lang-select {
+  background: var(--bg) !important;
+  color: var(--text);
+  border: 1px solid var(--border) !important;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  width: 100%;
+}
+.nft-card {
+  background: var(--card);
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+.nft-card:hover {
+  border-color: var(--accent);
+}
+.mint-card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.nft-image {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+.marketplace-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.status {
+  padding: 10px 12px;
+  border-radius: 6px;
+  margin: 8px 0;
+  font-size: 12px;
+  border: 1px solid;
+}
+.status.loading {
+  background: var(--bg);
+  color: var(--muted);
+}
+.btn-success {
+  background: #10b981;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+.btn-danger {
+  background: #ef4444;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+.btn-warning {
+  background: #f59e0b;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+/* Override inputs and backgrounds */
+input,
+textarea,
+select {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 6px !important;
+  padding: 8px 10px !important;
+  font-size: 13px !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted) !important;
+  opacity: 0.8;
+}
+
+/* Card overrides */
+.card {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+}
+.card h2 {
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--border) !important;
+  margin-bottom: 16px !important;
+  padding-bottom: 12px !important;
+}
+.card h3 {
+  color: var(--text) !important;
+}
+
+.contract-item {
+  background: var(--card) !important;
+  border-color: var(--border) !important;
+  color: var(--text) !important;
+}
+.contract-item strong {
+  color: var(--accent) !important;
+}
+
+.wallet-info-item {
+  background: var(--bg) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+.wallet-info-item strong {
+  color: var(--accent) !important;
+}
+
+/* Status messages */
+.status {
+  border-radius: 6px;
+  margin: 8px 0;
+  padding: 10px 12px;
+}
+.status.success {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
+  border: 1px solid #10b981 !important;
+}
+.status.error {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #ef4444 !important;
+  border: 1px solid #ef4444 !important;
+}
+.status.loading {
+  background: rgba(245, 158, 11, 0.1) !important;
+  color: #f59e0b !important;
+  border: 1px solid #f59e0b !important;
+}
+
+/* Buttons */
+button {
+  background: var(--accent) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 8px 12px !important;
+  cursor: pointer !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+button:hover {
+  opacity: 0.9 !important;
+  transform: none !important;
+}
+button:active {
+  opacity: 0.8 !important;
+}
+button:disabled {
+  background: var(--muted) !important;
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+  .content {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sidebar {
+    display: none;
+  }
+  .container {
+    padding: 12px;
+    gap: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .content {
+    grid-template-columns: 1fr;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .header .actions {
+    width: 100%;
+    margin-top: 12px;
+  }
+}

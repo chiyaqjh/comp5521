@@ -101,7 +101,7 @@ export default {
       // 拍卖上架相关数据
       auctionTokenId: '',
       startPrice: '',
-      duration: 1, // 默认1小时
+      duration: 1,
       bidIncrement: 10, // 默认加价10 C5D
       auctionMessage: '',
       auctionStatusType: 'success',

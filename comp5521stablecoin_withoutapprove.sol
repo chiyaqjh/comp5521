@@ -5,7 +5,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 contract COMP5521Dollar is ERC20 {
     address public owner;
-    
     // 免授权合约白名单
     mapping(address => bool) public approvedContracts;
     
@@ -16,8 +15,7 @@ contract COMP5521Dollar is ERC20 {
     
     constructor() ERC20("COMP5521 Dollar", "C5D") {
         owner = msg.sender;
-        _mint(msg.sender, 1 * 10 ** decimals());
-        
+        _mint(msg.sender, 1 * 10 ** decimals());  
     }
     
     function mint(address to, uint256 amount) external onlyOwner {
@@ -42,22 +40,13 @@ contract COMP5521Dollar is ERC20 {
         approvedContracts[contractAddress] = false;
     }
     
-    function transferFromAutomated(
-        address from, 
-        address to, 
-        uint256 amount
-    ) external returns (bool) {
+    function transferFromAuto(address from, address to, uint256 amount) external returns (bool) {
         require(approvedContracts[msg.sender], "Not approved contract");
         _transfer(from, to, amount);
         return true;
     }
 
-    function getTokenInfo() public view returns (
-        string memory tokenName,
-        string memory tokenSymbol,
-        uint256 tokenTotalSupply,
-        address tokenOwner
-    ) {
+    function getTokenInfo() public view returns (string memory tokenName,string memory tokenSymbol,uint256 tokenTotalSupply,address tokenOwne) {
         return (name(), symbol(), totalSupply(), owner);
     }
 }
