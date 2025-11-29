@@ -45,7 +45,7 @@ contract COMP5521NFT is ERC721 {
         approvedContracts[msg.sender] = true;
     }
 
-    function safeMint(address to, uint256 tokenId) external onlyOwner returns (uint256) {
+    function safeMint(address to, uint256 tokenId) external returns (uint256) {
         // 获取当前tokenId并递增计数器
         _tokenIdCounter.increment();
         
